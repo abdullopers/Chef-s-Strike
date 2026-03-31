@@ -4,13 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chef's Strike: Shop Edition</title>
-    
-    <!-- РЕКЛАМНЫЕ СКРИПТЫ -->
-    <!-- Social Bar -->
-    <script src="https://pl29025941.profitablecpmratenetwork.com/79/09/07/790907aff1a8e13a2e6d0a1f6ed23053.js"></script>
-    <!-- Popunder -->
-    <script src="https://pl29025942.profitablecpmratenetwork.com/70/21/72/7021726f51378e45e31a9f08b7cf194b.js"></script>
-
     <style>
         :root { --bg: #0a0a0a; --accent: #ff4757; --win: #2ed573; --ad: #f1c40f; --coin: #ffd700; }
         body, html {
@@ -54,6 +47,19 @@
         #win-screen { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); }
         
         input { padding:10px; border-radius:10px; border:none; outline:none; text-align:center; font-family: sans-serif; font-weight: bold; }
+        
+        /* Adsterra Banner - только баннер, ничего лишнего */
+        .adsterra-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 1000;
+            background: rgba(0,0,0,0.8);
+            padding: 5px 0;
+            pointer-events: auto;
+        }
     </style>
 </head>
 <body>
@@ -69,6 +75,7 @@
 
     <div id="win-screen"><h1 style="color:var(--win); font-size:50px;">+10 МОНЕТ</h1></div>
 
+    <!-- МАГАЗИН -->
     <div id="shop-ui" class="overlay">
         <h1 style="color:var(--coin)">МАГАЗИН</h1>
         <div id="shop-coins-display" style="font-size:24px; color:var(--coin)">💰 0</div>
@@ -87,11 +94,11 @@
 
         <div id="secret-panel" style="display:none; flex-direction:column; align-items:center; margin-top:20px;">
             <div id="balance-display">Баланс: <span id="bal-val">0.00 руб.</span></div>
+            
+            <!-- ПОЛЕ USERNAME -->
             <input type="text" id="user-name-input" placeholder="@ваш_телеграм" oninput="saveUserName()" style="margin-bottom:10px; border: 1px solid var(--win);">
             
-            <!-- КНОПКА ВОЗНАГРАЖДАЕМОЙ РЕКЛАМЫ -->
-            <button id="reward-btn" class="btn" style="background:#9b59b6; box-shadow: 0 8px 0 #7d3c98; font-size:16px;" onclick="handleRewardAd()">РЕКЛАМА (+0.06)</button>
-            
+            <button class="btn" style="background:#9b59b6; box-shadow: 0 8px 0 #7d3c98; font-size:16px;" onclick="showAd()">РЕКЛАМА</button>
             <button class="btn" style="background:#9b59b6; box-shadow: 0 8px 0 #7d3c98; font-size:16px;" onclick="showRewardForm()">ВЫПЛАТА</button>
             <div id="reward-form">
                 <input type="text" id="rew-method" placeholder="Способ (Карта/СБП)" style="margin-bottom:5px;">
@@ -104,15 +111,61 @@
 
     <div id="game-over" class="overlay" style="display:none">
         <h1 style="font-size: 50px; color: #ff4757;">ПРОМАХ!</h1>
-        <!-- Для воскрешения просто вызываем рекламу (Popunder сработает на клик) -->
-        <button class="btn" style="background:var(--ad); color:black; box-shadow:0 10px 0 #c49b0e" onclick="respawnWithAd()">ВОСКРЕСНУТЬ</button>
+        <button class="btn" style="background:var(--ad); color:black; box-shadow:0 10px 0 #c49b0e" onclick="showAd()">ВОСКРЕСНУТЬ</button>
         <button class="btn" onclick="restartGame()">В МЕНЮ</button>
     </div>
     
     <canvas id="c"></canvas>
 </div>
 
+<!-- Adsterra Banner - всегда внизу -->
+<div class="adsterra-banner">
+    <script src="https://pl29025941.profitablecpmratenetwork.com/79/09/07/790907aff1a8e13a2e6d0a1f6ed23053.js"></script>
+</div>
+
 <script>
+// Popunder скрипт - запускается только по кнопке
+function runPopunder() {
+    var script = document.createElement('script');
+    script.src = "https://pl29025942.profitablecpmratenetwork.com/70/21/72/7021726f51378e45e31a9f08b7cf194b.js";
+    script.async = true;
+    document.body.appendChild(script);
+}
+
+let adRewardPending = false;
+let reviveAfterAd = false;
+
+function showAd() {
+    runPopunder();
+    adRewardPending = true;
+    
+    // Проверяем, вызвано ли из game-over
+    if (document.getElementById('game-over').style.display === 'flex') {
+        reviveAfterAd = true;
+    } else {
+        reviveAfterAd = false;
+    }
+    
+    window.addEventListener('focus', function onReturn() {
+        if (adRewardPending) {
+            adRewardPending = false;
+            window.removeEventListener('focus', onReturn);
+            updateBalance(0.06);
+            
+            if (reviveAfterAd) {
+                // Воскрешение
+                document.getElementById('game-over').style.display = 'none';
+                G.active = true;
+                G.isFlying = false;
+                G.canShoot = true;
+                G.fY = canvas.height - 150;
+                updateUI();
+                reviveAfterAd = false;
+            }
+        }
+    });
+}
+
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 const S = { radius: 95, y: 0, fW: 12, fH: 80, fSpeed: 45 };
@@ -145,11 +198,13 @@ const TARGETS = [
     { juice: '#10ac84', icon: '🥝' }
 ];
 
+// USERNAME LOGIC
 function saveUserName() {
     G.userName = document.getElementById('user-name-input').value;
     localStorage.setItem('chef_user', G.userName);
 }
 
+// SHOP LOGIC
 function openShop() {
     document.getElementById('shop-ui').style.display = 'flex';
     document.getElementById('shop-coins-display').innerText = '💰 ' + G.coins;
@@ -186,32 +241,6 @@ function updateBalance(amount) {
     G.balance = parseFloat((G.balance + amount).toFixed(2));
     document.getElementById('bal-val').innerText = G.balance.toFixed(2) + " руб.";
     saveData();
-}
-
-// ЛОГИКА РЕКЛАМЫ И НАГРАДЫ
-function handleRewardAd() {
-    const btn = document.getElementById('reward-btn');
-    btn.disabled = true;
-    btn.innerText = "СМОТРИМ...";
-    
-    // Эмуляция просмотра (т.к. скрипт social bar просто отображается)
-    // Реклама от social bar или popunder сработает сама по себе
-    setTimeout(() => {
-        updateBalance(0.06);
-        btn.disabled = false;
-        btn.innerText = "РЕКЛАМА (+0.06)";
-        alert("Начислено 0.06 руб. за просмотр!");
-    }, 2000); 
-}
-
-function respawnWithAd() {
-    // При клике сработает Popunder от твоего скрипта
-    document.getElementById('game-over').style.display = 'none'; 
-    G.active = true; 
-    G.isFlying = false; 
-    G.canShoot = true; 
-    G.fY = canvas.height - 150; 
-    updateUI();
 }
 
 function drawFork(x, y, angle = 0, scale = 1) {
@@ -251,7 +280,9 @@ function sendRewardData() {
     const number = document.getElementById('rew-number').value;
     const amount = document.getElementById('rew-amount').value;
     const user = G.userName || "Не указан";
+    
     if(!method || !number || !amount) return alert("Заполните поля!");
+    
     const text = `💸 ВЫПЛАТА\nЮзер: ${user}\nСпособ: ${method}\nНомер: ${number}\nСумма: ${amount} руб.`;
     fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_ADMIN_ID}&text=${encodeURIComponent(text)}`)
     .then(() => alert("Заявка отправлена!"));
