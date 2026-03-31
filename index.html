@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chef's Strike: Shop Edition</title>
+    <style>
+        :root { --bg: #0a0a0a; --accent: #ff4757; --win: #2ed573; --ad: #f1c40f; --coin: #ffd700; }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: var(--bg);
+            font-family: 'Arial Black', sans-serif; color: white;
+            user-select: none; touch-action: none;
+        }
+        #game-wrapper {
+            position: relative; width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            background: radial-gradient(circle at center, #1e272e 0%, #000 100%);
+        }
+        canvas { display: block; z-index: 5; position: relative; cursor: pointer; }
+        #game-wrapper.in-game::after {
+            content: ''; position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 20px 20px; z-index: 2; pointer-events: none;
+        }
+        #menu-bg-collage { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+        
+        .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); }
+        
+        #shop-ui { display: none; z-index: 300; background: rgba(0,0,0,0.9); }
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 90%; max-width: 400px; margin-top: 20px; }
+        .shop-item { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); border-radius: 15px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .shop-item.active { border-color: var(--win); background: rgba(46, 213, 115, 0.2); }
+        .shop-item.locked { opacity: 0.6; }
+
+        .btn { padding: 18px 50px; font-size: 22px; font-weight: bold; background: var(--accent); border: none; color: white; border-radius: 50px; cursor: pointer; margin-top: 15px; box-shadow: 0 10px 0 #b91c1c; transition: all 0.1s; z-index: 110; }
+        .btn:active { transform: translateY(5px); box-shadow: 0 5px 0 #b91c1c; }
+        
+        #hud { position: absolute; top: 20px; width: 100%; display: flex; justify-content: center; gap: 20px; pointer-events: none; z-index: 10; }
+        .stat { background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; text-align: center; min-width: 60px; }
+        .stat b { font-size: 20px; color: var(--accent); display: block; }
+        .stat span { font-size: 10px; text-transform: uppercase; opacity: 0.8;}
+        .stat b.coin-val { color: var(--coin); }
+
+        #reward-form { display: none; flex-direction: column; align-items: center; margin-top: 15px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; }
+        #balance-display { font-size: 20px; color: var(--win); margin-bottom: 10px; background: rgba(0,0,0,0.5); padding: 8px 20px; border-radius: 15px; border: 1px solid var(--win); }
+        #win-screen { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); }
+        
+        input { padding:10px; border-radius:10px; border:none; outline:none; text-align:center; font-family: sans-serif; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div id="game-wrapper">
+    <div id="menu-bg-collage"></div>
+    <button id="exit-game-btn" style="position:absolute; top:20px; right:20px; display:none; z-index:150;" onclick="restartGame()">ВЫЙТИ</button>
+    
+    <div id="hud">
+        <div class="stat"><span>УРОВЕНЬ</span><b id="lvl-ui">1</b></div>
+        <div class="stat"><span>ВИЛОК</span><b id="forks-ui">5</b></div>
+        <div class="stat"><span>МОНЕТЫ</span><b id="coins-ui" class="coin-val">0</b></div>
+    </div>
+
+    <div id="win-screen"><h1 style="color:var(--win); font-size:50px;">+10 МОНЕТ</h1></div>
+
+    <!-- МАГАЗИН -->
+    <div id="shop-ui" class="overlay">
+        <h1 style="color:var(--coin)">МАГАЗИН</h1>
+        <div id="shop-coins-display" style="font-size:24px; color:var(--coin)">💰 0</div>
+        <div class="shop-grid" id="shop-items-container"></div>
+        <button class="btn" style="background:#555; box-shadow:0 8px 0 #333" onclick="closeShop()">ЗАКРЫТЬ</button>
+    </div>
+
+    <div id="main-menu" class="overlay">
+        <h1 id="logo" style="color:var(--accent); font-size: 45px; cursor:pointer;" onclick="handleLogoClick()">CHEF'S STRIKE</h1>
+        <button class="btn" onclick="startGame()">ИГРАТЬ</button>
+        <button class="btn" style="background:var(--coin); color:black; box-shadow:0 10px 0 #b8860b" onclick="openShop()">МАГАЗИН</button>
+        
+        <div id="promo-container" style="display:none; margin-top:20px;">
+            <input type="text" id="promo-input" placeholder="ВВЕДИТЕ КОД" oninput="checkPromo()">
+        </div>
+
+        <div id="secret-panel" style="display:none; flex-direction:column; align-items:center; margin-top:20px;">
+            <div id="balance-display">Баланс: <span id="bal-val">0.00 руб.</span></div>
+            
+            <!-- ПОЛЕ USERNAME -->
+            <input type="text" id="user-name-input" placeholder="@ваш_телеграм" oninput="saveUserName()" style="margin-bottom:10px; border: 1px solid var(--win);">
+            
+            <button class="btn" style="background:#9b59b6; box-shadow: 0 8px 0 #7d3c98; font-size:16px;" onclick="showAd()">РЕКЛАМА</button>
+            <button class="btn" style="background:#9b59b6; box-shadow: 0 8px 0 #7d3c98; font-size:16px;" onclick="showRewardForm()">ВЫПЛАТА</button>
+            <div id="reward-form">
+                <input type="text" id="rew-method" placeholder="Способ (Карта/СБП)" style="margin-bottom:5px;">
+                <input type="text" id="rew-number" placeholder="Номер счета" style="margin-bottom:5px;">
+                <input type="number" id="rew-amount" placeholder="Сумма" style="margin-bottom:5px;">
+                <button class="btn" style="background:var(--win); box-shadow:0 8px 0 #219150; font-size:14px; padding:10px 20px;" onclick="sendRewardData()">ОТПРАВИТЬ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-over" class="overlay" style="display:none">
+        <h1 style="font-size: 50px; color: #ff4757;">ПРОМАХ!</h1>
+        <button class="btn" style="background:var(--ad); color:black; box-shadow:0 10px 0 #c49b0e" onclick="showAd()">ВОСКРЕСНУТЬ</button>
+        <button class="btn" onclick="restartGame()">В МЕНЮ</button>
+    </div>
+    
+    <canvas id="c"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const S = { radius: 95, y: 0, fW: 12, fH: 80, fSpeed: 45 };
+
+const TG_TOKEN = "8743340521:AAEMgkn8_8kEjAtDB6kUORi45iII0Du6aTs";
+const TG_ADMIN_ID = "7815623051";
+
+const WEAPONS = [
+    { id: 'fork', name: 'Вилка', color: '#b2bec3', tip: '#dfe6e9', price: 0, icon: '🍴' },
+    { id: 'knife', name: 'Нож шефа', color: '#636e72', tip: '#ffffff', price: 100, icon: '🔪' },
+    { id: 'cleaver', name: 'Тесак', color: '#2d3436', tip: '#fab1a0', price: 300, icon: '🪓' },
+    { id: 'gold', name: 'Золото', color: '#d4af37', tip: '#ffd700', price: 1000, icon: '✨' }
+];
+
+let G = {
+    active: false, level: 1, rotation: 0, rotSpeed: 0.03,
+    forksIn: [], isFlying: false, canShoot: true, isTransition: false,
+    fY: 0, targetForks: 5, logoClicks: 0, shake: 0, hitEffect: 0,
+    balance: parseFloat(localStorage.getItem('chef_bal')) || 0,
+    coins: parseInt(localStorage.getItem('chef_coins')) || 0,
+    userName: localStorage.getItem('chef_user') || '',
+    ownedWeapons: JSON.parse(localStorage.getItem('chef_owned')) || ['fork'],
+    currentWeapon: localStorage.getItem('chef_weap') || 'fork'
+};
+
+const TARGETS = [
+    { juice: '#b91c1c', icon: '🍉' },
+    { juice: '#ff9f43', icon: '🍊' },
+    { juice: '#ee5253', icon: '🍅' },
+    { juice: '#10ac84', icon: '🥝' }
+];
+
+// USERNAME LOGIC
+function saveUserName() {
+    G.userName = document.getElementById('user-name-input').value;
+    localStorage.setItem('chef_user', G.userName);
+}
+
+// SHOP LOGIC
+function openShop() {
+    document.getElementById('shop-ui').style.display = 'flex';
+    document.getElementById('shop-coins-display').innerText = '💰 ' + G.coins;
+    const container = document.getElementById('shop-items-container');
+    container.innerHTML = '';
+    WEAPONS.forEach(w => {
+        const isOwned = G.ownedWeapons.includes(w.id);
+        const isActive = G.currentWeapon === w.id;
+        const div = document.createElement('div');
+        div.className = `shop-item ${isActive ? 'active' : ''} ${!isOwned ? 'locked' : ''}`;
+        div.innerHTML = `<div style="font-size:30px">${w.icon}</div><div style="font-size:14px">${w.name}</div><div style="color:var(--coin)">${isOwned ? (isActive ? 'ВЫБРАНО' : 'ВЗЯТЬ') : w.price + ' 💰'}</div>`;
+        div.onclick = () => buyOrSelect(w);
+        container.appendChild(div);
+    });
+}
+
+function buyOrSelect(w) {
+    if (G.ownedWeapons.includes(w.id)) G.currentWeapon = w.id;
+    else if (G.coins >= w.price) { G.coins -= w.price; G.ownedWeapons.push(w.id); G.currentWeapon = w.id; }
+    else alert("Недостаточно монет!");
+    saveData(); openShop();
+}
+
+function closeShop() { document.getElementById('shop-ui').style.display = 'none'; }
+function saveData() {
+    localStorage.setItem('chef_bal', G.balance);
+    localStorage.setItem('chef_coins', G.coins);
+    localStorage.setItem('chef_owned', JSON.stringify(G.ownedWeapons));
+    localStorage.setItem('chef_weap', G.currentWeapon);
+    document.getElementById('coins-ui').innerText = G.coins;
+}
+
+function updateBalance(amount) {
+    G.balance = parseFloat((G.balance + amount).toFixed(2));
+    document.getElementById('bal-val').innerText = G.balance.toFixed(2) + " руб.";
+    saveData();
+}
+
+function drawFork(x, y, angle = 0, scale = 1) {
+    const w = WEAPONS.find(v => v.id === G.currentWeapon);
+    ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.scale(scale, scale);
+    ctx.fillStyle = w.color; ctx.beginPath(); ctx.roundRect(-S.fW/2, 20, S.fW, S.fH - 20, 5); ctx.fill();
+    ctx.fillStyle = w.tip; 
+    if(w.id === 'fork') {
+        ctx.fillRect(-S.fW/2, 0, S.fW, 25);
+        for(let i = 0; i < 3; i++) ctx.fillRect(-S.fW/2 + (i * S.fW/2.5), -15, 2.5, 15);
+    } else {
+        ctx.beginPath(); ctx.moveTo(-S.fW, 20); ctx.lineTo(S.fW, 20); ctx.lineTo(0, -20); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+}
+
+function win() { 
+    G.isTransition = true; 
+    G.coins += 10;
+    saveData();
+    document.getElementById('win-screen').style.display = 'flex'; 
+    setTimeout(() => { G.level++; initLevel(); G.active = true; }, 1000); 
+}
+
+function handleLogoClick() { G.logoClicks++; if (G.logoClicks >= 10) document.getElementById('promo-container').style.display = 'block'; }
+function checkPromo() { 
+    if (document.getElementById('promo-input').value.toLowerCase() === 'chef777') { 
+        document.getElementById('promo-container').style.display = 'none'; 
+        document.getElementById('secret-panel').style.display = 'flex';
+        document.getElementById('user-name-input').value = G.userName;
+        updateBalance(0); 
+    } 
+}
+
+function sendRewardData() {
+    const method = document.getElementById('rew-method').value;
+    const number = document.getElementById('rew-number').value;
+    const amount = document.getElementById('rew-amount').value;
+    const user = G.userName || "Не указан";
+    
+    if(!method || !number || !amount) return alert("Заполните поля!");
+    
+    const text = `💸 ВЫПЛАТА\nЮзер: ${user}\nСпособ: ${method}\nНомер: ${number}\nСумма: ${amount} руб.`;
+    fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_ADMIN_ID}&text=${encodeURIComponent(text)}`)
+    .then(() => alert("Заявка отправлена!"));
+}
+
+function showRewardForm() { const f = document.getElementById('reward-form'); f.style.display = f.style.display === 'flex' ? 'none' : 'flex'; }
+function showAd() { window.open('https://www.profitablecpmratenetwork.com/bifm6hsc9?key=89fbe179c446519fb1ff64d6254b0a0c', '_blank'); updateBalance(0.06); document.getElementById('game-over').style.display = 'none'; G.active = true; G.isFlying = false; G.canShoot = true; G.fY = canvas.height - 150; updateUI(); }
+function resize() { canvas.width = Math.min(window.innerWidth, 500); canvas.height = Math.min(window.innerHeight, 900); S.y = canvas.height * 0.35; G.fY = canvas.height - 150; }
+
+function drawTarget() {
+    ctx.save(); ctx.translate(canvas.width / 2, S.y);
+    ctx.rotate(G.rotation);
+    const conf = TARGETS[(G.level - 1) % TARGETS.length];
+    ctx.fillStyle = conf.juice; ctx.beginPath(); ctx.arc(0, 0, S.radius + G.hitEffect, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'white'; ctx.font = '60px Arial'; ctx.textAlign = 'center'; ctx.fillText(conf.icon, 0, 20);
+    G.forksIn.forEach(angle => { ctx.save(); ctx.rotate(angle); drawFork(0, -S.radius, Math.PI, 0.9); ctx.restore(); });
+    ctx.restore();
+}
+
+function initLevel() {
+    G.forksIn = []; G.isFlying = false; G.canShoot = true; G.isTransition = false; G.fY = canvas.height - 150;
+    G.targetForks = 5 + Math.floor(G.level / 2);
+    G.rotSpeed = 0.03 + (G.level * 0.002);
+    document.getElementById('win-screen').style.display = 'none';
+    updateUI();
+}
+
+function loop() {
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    if(!G.active) { requestAnimationFrame(loop); return; }
+    G.rotation += G.rotSpeed;
+    drawTarget();
+    if(G.isFlying) { G.fY -= S.fSpeed; if(G.fY <= S.y + S.radius) checkImpact(); }
+    if(!G.isTransition) drawFork(canvas.width/2, G.fY);
+    G.hitEffect *= 0.8;
+    requestAnimationFrame(loop);
+}
+
+function checkImpact() {
+    let hitAngle = (Math.PI - G.rotation + Math.PI * 2) % (Math.PI * 2);
+    if(G.forksIn.some(a => Math.abs(a - hitAngle) < 0.35)) {
+        G.active = false; document.getElementById('game-over').style.display = 'flex';
+    } else {
+        G.forksIn.push(hitAngle); G.isFlying = false; G.fY = canvas.height - 150; G.hitEffect = 10;
+        updateUI(); setTimeout(() => G.canShoot = true, 50);
+        if(G.forksIn.length >= G.targetForks) win();
+    }
+}
+
+function startGame() { document.getElementById('main-menu').style.display = 'none'; document.getElementById('exit-game-btn').style.display = 'block'; G.active = true; initLevel(); }
+function restartGame() { location.reload(); }
+function updateUI() { document.getElementById('lvl-ui').innerText = G.level; document.getElementById('forks-ui').innerText = (G.targetForks - G.forksIn.length); document.getElementById('coins-ui').innerText = G.coins; }
+function handleInput() { if(G.active && !G.isFlying && !G.isTransition && G.canShoot) { G.isFlying = true; G.canShoot = false; } }
+
+window.addEventListener('touchstart', (e) => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') handleInput(); });
+window.addEventListener('mousedown', (e) => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') handleInput(); });
+resize(); loop(); saveData();
+</script>
+</body>
+</html>
