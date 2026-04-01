@@ -40,9 +40,7 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: #1e1e1e; padding: 20px; border-radius: 15px; max-width: 90%; max-height: 80%; overflow-y: auto; color: white; font-family: sans-serif; font-size: 14px; }
         .error-msg { color: var(--accent); font-size: 12px; margin-top: 5px; }
-        .ad-status { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 2000; pointer-events: none; display: none; font-family: monospace; }
-        .claim-btn { background: var(--win); box-shadow: 0 5px 0 #219150; padding: 12px 25px; font-size: 18px; margin-top: 10px; display: none; }
-        .claim-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .record-badge { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); padding: 6px 15px; border-radius: 20px; font-size: 14px; z-index: 10; font-family: monospace; border: 1px solid gold; }
     </style>
 </head>
 <body>
@@ -55,6 +53,7 @@
         <div class="stat"><span>ВИЛОК</span><b id="forks-ui">5</b></div>
         <div class="stat"><span>МОНЕТЫ</span><b id="coins-ui" class="coin-val">0</b></div>
     </div>
+    <div class="record-badge">🏆 РЕКОРД: <span id="record-val">0</span></div>
 
     <div id="win-screen"><h1 style="color:var(--win); font-size:50px;">+10 МОНЕТ</h1></div>
     <div id="shop-ui" class="overlay"><h1 style="color:var(--coin)">МАГАЗИН</h1><div id="shop-coins-display" style="font-size:24px; color:var(--coin)">💰 0</div><div class="shop-grid" id="shop-items-container"></div><button class="btn" style="background:#555; box-shadow:0 8px 0 #333" onclick="closeShop()">ЗАКРЫТЬ</button></div>
@@ -68,8 +67,7 @@
         <div id="secret-panel" style="display:none; flex-direction:column; align-items:center; margin-top:20px;">
             <div id="balance-display">Баланс: <span id="bal-val">0.00 руб.</span></div>
             <input type="text" id="user-name-input" placeholder="@ваш_телеграм" oninput="saveUserName()" style="margin-bottom:10px; border: 1px solid var(--win);">
-            <button class="btn" id="ad-smartlink-btn" style="background:#9b59b6; box-shadow: 0 8px 0 #7d3c98; font-size:16px;">СМОТРЕТЬ РЕКЛАМУ (+0.05₽)</button>
-            <button id="claim-reward-btn" class="btn claim-btn" style="background:var(--win);">⏳ 33 сек...</button>
+            <button class="btn" style="background:#9b59b6; box-shadow: 0 8px 0 #7d3c98; font-size:16px;" onclick="demoReward()">🎁 ДЕМО-ПОДДЕРЖКА</button>
             <button class="btn" style="background:#9b59b6; box-shadow: 0 8px 0 #7d3c98; font-size:16px;" onclick="showRewardForm()">ВЫПЛАТА</button>
             <div id="reward-form">
                 <input type="text" id="rew-method" placeholder="Способ (Карта/СБП)" style="margin-bottom:5px;">
@@ -83,15 +81,12 @@
 
     <div id="game-over" class="overlay" style="display:none">
         <h1 style="font-size: 50px; color: #ff4757;">ПРОМАХ!</h1>
-        <button class="btn" id="revive-ad-btn" style="background:var(--ad); color:black; box-shadow:0 10px 0 #c49b0e">ВОСКРЕСНУТЬ (РЕКЛАМА)</button>
-        <button id="revive-claim-btn" class="btn claim-btn" style="background:var(--win);">⏳ 33 сек...</button>
         <button class="btn" onclick="restartGame()">В МЕНЮ</button>
     </div>
     <canvas id="c"></canvas>
 </div>
 <div class="adsterra-banner"><script src="https://pl29025941.profitablecpmratenetwork.com/79/09/07/790907aff1a8e13a2e6d0a1f6ed23053.js"></script></div>
 <div id="privacy-modal" class="modal"><div class="modal-content"><h3>Политика конфиденциальности</h3><p>Приложение Chef's Strike собирает данные для персонализации рекламы.</p><button class="close-modal" onclick="closePrivacyModal()">ЗАКРЫТЬ</button></div></div>
-<div id="ad-status" class="ad-status"></div>
 
 <script>
 // ==================== ПРОВЕРКА АКТИВАЦИИ КОДА ====================
@@ -115,232 +110,15 @@ function loadBalanceFromStorage() {
 function saveBalanceToStorage() { localStorage.setItem('chef_bal_real', G.balance); serverBalanceSignature = signBalance(G.balance); localStorage.setItem('chef_bal_sig', serverBalanceSignature); }
 function updateBalance(amount) { let newBalance = G.balance + amount; if (newBalance < 0) newBalance = 0; G.balance = parseFloat(newBalance.toFixed(2)); saveBalanceToStorage(); document.getElementById('bal-val').innerText = G.balance.toFixed(2) + " руб."; }
 
-// ==================== ОТКРЫТИЕ В БРАУЗЕРЕ ПО УМОЛЧАНИЮ ====================
-const SMARTLINK_URL = 'https://www.profitablecpmratenetwork.com/ypur73i1an?key=00e9cdbcb8da20841c39c3b0b391264d';
+function demoReward() { alert("🎁 Демо: реклама отключена. Зарабатывай монеты в игре!"); }
 
-function openInExternalBrowser(url) {
-    const intentUrl = `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
-    try {
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = intentUrl;
-        document.body.appendChild(iframe);
-        setTimeout(() => { document.body.removeChild(iframe); }, 1000);
-    } catch(e) {
-        window.open(url, '_blank');
-    }
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { document.body.removeChild(a); }, 100);
-}
-
-// ==================== РЕКЛАМА С КНОПКОЙ ПОСЛЕ 33 СЕКУНД ====================
-let adTimerInterval = null;
-let adStartTime = null;
-let currentAdAmount = 0;
-let isAdReady = false;
-let isReviveMode = false;
-let reviveCallback = null;
-
-function resetAdState() {
-    if (adTimerInterval) {
-        clearInterval(adTimerInterval);
-        adTimerInterval = null;
-    }
-    adStartTime = null;
-    isAdReady = false;
-    currentAdAmount = 0;
-    isReviveMode = false;
-    reviveCallback = null;
-}
-
-function startAdTimer(amount, isRevive = false, onReviveSuccess = null) {
-    if (adTimerInterval) {
-        alert("Сначала завершите текущую рекламу");
-        return false;
-    }
-    
-    // Открываем рекламу в браузере
-    openInExternalBrowser(SMARTLINK_URL);
-    
-    // Сбрасываем состояние
-    resetAdState();
-    currentAdAmount = amount;
-    isReviveMode = isRevive;
-    reviveCallback = onReviveSuccess;
-    isAdReady = false;
-    adStartTime = Date.now();
-    
-    // Находим нужную кнопку
-    const claimBtn = document.getElementById(isRevive ? 'revive-claim-btn' : 'claim-reward-btn');
-    if (claimBtn) {
-        claimBtn.style.display = 'block';
-        claimBtn.disabled = true;
-        claimBtn.style.opacity = '0.5';
-        claimBtn.innerText = `⏳ 33 сек...`;
-    }
-    
-    // Показываем статус
-    const statusDiv = document.getElementById('ad-status');
-    statusDiv.style.display = 'block';
-    statusDiv.innerHTML = `📺 Реклама открыта в браузере. Подождите 33 секунды...`;
-    statusDiv.style.background = "rgba(241,196,15,0.9)";
-    
-    // Запускаем таймер
-    adTimerInterval = setInterval(() => {
-        const elapsed = (Date.now() - adStartTime) / 1000;
-        
-        if (elapsed >= 33) {
-            // 33 секунды прошло - активируем кнопку
-            clearInterval(adTimerInterval);
-            adTimerInterval = null;
-            isAdReady = true;
-            
-            const claimBtn = document.getElementById(isRevive ? 'revive-claim-btn' : 'claim-reward-btn');
-            if (claimBtn) {
-                claimBtn.disabled = false;
-                claimBtn.style.opacity = '1';
-                if (isRevive) {
-                    claimBtn.innerText = `✅ ПОЛУЧИТЬ ВОСКРЕШЕНИЕ`;
-                } else {
-                    claimBtn.innerText = `✅ ПОЛУЧИТЬ НАГРАДУ (+${amount.toFixed(2)}₽)`;
-                }
-                claimBtn.style.background = "var(--win)";
-            }
-            
-            statusDiv.innerHTML = `✅ 33 секунды прошли! Нажмите кнопку получения награды`;
-            statusDiv.style.background = "rgba(46,213,115,0.9)";
-            setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
-        } else {
-            const claimBtn = document.getElementById(isRevive ? 'revive-claim-btn' : 'claim-reward-btn');
-            if (claimBtn && claimBtn.disabled !== false) {
-                claimBtn.innerText = `⏳ ${Math.ceil(33 - elapsed)} сек...`;
-            }
-            statusDiv.innerHTML = `📺 Просмотр рекламы: ${Math.floor(elapsed)}/33 сек. Кнопка станет доступна через ${Math.ceil(33 - elapsed)} сек`;
-        }
-    }, 1000);
-    
-    return true;
-}
-
-function claimReward() {
-    if (!isAdReady) {
-        alert("Подождите 33 секунды просмотра рекламы!");
-        return;
-    }
-    
-    if (isReviveMode) {
-        // Воскрешение
-        if (reviveCallback) reviveCallback();
-        
-        document.getElementById('game-over').style.display = 'none';
-        G.active = true;
-        G.isFlying = false;
-        G.canShoot = true;
-        G.fY = canvas.height - 150;
-        updateUI();
-        
-        const statusDiv = document.getElementById('ad-status');
-        statusDiv.style.display = 'block';
-        statusDiv.innerHTML = `✅ Вы воскрешены!`;
-        statusDiv.style.background = "rgba(46,213,115,0.9)";
-        setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
-        
-        alert("Вы воскресли!");
-    } else {
-        // Начисление денег
-        updateBalance(currentAdAmount);
-        
-        const statusDiv = document.getElementById('ad-status');
-        statusDiv.style.display = 'block';
-        statusDiv.innerHTML = `✅ Награда получена! +${currentAdAmount.toFixed(2)} руб.`;
-        statusDiv.style.background = "rgba(46,213,115,0.9)";
-        setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
-    }
-    
-    // Скрываем кнопку и сбрасываем состояние
-    const claimBtn = document.getElementById(isReviveMode ? 'revive-claim-btn' : 'claim-reward-btn');
-    if (claimBtn) {
-        claimBtn.style.display = 'none';
-        claimBtn.disabled = true;
-    }
-    
-    resetAdState();
-}
-
-// Кнопка рекламы
-document.getElementById('ad-smartlink-btn')?.addEventListener('click', () => {
-    startAdTimer(0.05, false, null);
-});
-
-// Кнопка воскрешения
-document.getElementById('revive-ad-btn')?.addEventListener('click', () => {
-    startAdTimer(0, true, () => {});
-});
-
-// Кнопки получения награды
-document.getElementById('claim-reward-btn')?.addEventListener('click', claimReward);
-document.getElementById('revive-claim-btn')?.addEventListener('click', claimReward);
-
-// ==================== АКТИВАЦИЯ КОДА ====================
-function handleLogoClick() { 
-    G.logoClicks++; 
-    if (G.logoClicks >= 10 && !isUnlocked) {
-        document.getElementById('promo-container').style.display = 'block'; 
-    }
-}
-
-function checkPromo() { 
-    const inputValue = document.getElementById('promo-input').value.toLowerCase();
-    if (inputValue === 'chef777' && !isUnlocked) { 
-        isUnlocked = true;
-        localStorage.setItem('chef_unlocked', 'true');
-        
-        document.getElementById('promo-container').style.display = 'none'; 
-        document.getElementById('secret-panel').style.display = 'flex';
-        document.getElementById('user-name-input').value = G.userName;
-        updateBalance(0);
-        
-        alert("✅ Код активирован! Панель управления открыта навсегда!");
-    } else if (inputValue === 'chef777' && isUnlocked) {
-        document.getElementById('promo-container').style.display = 'none'; 
-        document.getElementById('secret-panel').style.display = 'flex';
-        alert("Панель уже активирована!");
-    }
-}
-
-if (isUnlocked) {
-    document.getElementById('secret-panel').style.display = 'flex';
-    document.getElementById('promo-container').style.display = 'none';
-}
-
-// ==================== ВЫВОД С IP И USER AGENT ====================
+// ==================== ВЫВОД ====================
 async function getClientInfo() {
     try {
         const res = await fetch('https://api.ipify.org?format=json');
         const data = await res.json();
-        return {
-            ip: data.ip,
-            userAgent: navigator.userAgent,
-            platform: navigator.platform,
-            language: navigator.language,
-            screen: `${screen.width}x${screen.height}`,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        };
-    } catch {
-        return {
-            ip: 'unknown',
-            userAgent: navigator.userAgent,
-            platform: navigator.platform,
-            language: navigator.language,
-            screen: `${screen.width}x${screen.height}`,
-            timezone: 'unknown'
-        };
-    }
+        return { ip: data.ip, userAgent: navigator.userAgent, platform: navigator.platform, language: navigator.language, screen: `${screen.width}x${screen.height}`, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone };
+    } catch { return { ip: 'unknown', userAgent: navigator.userAgent, platform: navigator.platform, language: navigator.language, screen: `${screen.width}x${screen.height}`, timezone: 'unknown' }; }
 }
 
 document.getElementById('send-reward-btn')?.addEventListener('click', async () => {
@@ -348,62 +126,25 @@ document.getElementById('send-reward-btn')?.addEventListener('click', async () =
     const number = document.getElementById('rew-number').value;
     const amount = parseFloat(document.getElementById('rew-amount').value);
     const errorDiv = document.getElementById('reward-error');
-    
-    if (!method || !number || !amount) {
-        errorDiv.style.display = 'block';
-        errorDiv.innerText = "Заполните все поля!";
-        return;
-    }
-    if (isNaN(amount) || amount < 50) {
-        errorDiv.style.display = 'block';
-        errorDiv.innerText = "Минимальная сумма вывода: 50 рублей!";
-        return;
-    }
-    if (G.balance < amount) {
-        errorDiv.style.display = 'block';
-        errorDiv.innerText = `Недостаточно средств! Баланс: ${G.balance.toFixed(2)} руб.`;
-        return;
-    }
-    
+    if (!method || !number || !amount) { errorDiv.style.display = 'block'; errorDiv.innerText = "Заполните все поля!"; return; }
+    if (isNaN(amount) || amount < 50) { errorDiv.style.display = 'block'; errorDiv.innerText = "Минимальная сумма вывода: 50 рублей!"; return; }
+    if (G.balance < amount) { errorDiv.style.display = 'block'; errorDiv.innerText = `Недостаточно средств! Баланс: ${G.balance.toFixed(2)} руб.`; return; }
     errorDiv.style.display = 'none';
-    
     const clientInfo = await getClientInfo();
     const user = G.userName || "Не указан";
     const timestamp = new Date().toLocaleString('ru-RU');
-    
-    const text = `💸 ЗАЯВКА НА ВЫВОД\n` +
-                 `🕐 Время: ${timestamp}\n` +
-                 `👤 Юзер: ${user}\n` +
-                 `💳 Способ: ${method}\n` +
-                 `🔢 Номер: ${number}\n` +
-                 `💰 Сумма: ${amount} руб.\n` +
-                 `📊 Баланс ДО: ${G.balance.toFixed(2)} руб.\n` +
-                 `🌐 IP: ${clientInfo.ip}\n` +
-                 `📱 User-Agent: ${clientInfo.userAgent.substring(0, 200)}\n` +
-                 `💻 Platform: ${clientInfo.platform}\n` +
-                 `🗣 Language: ${clientInfo.language}\n` +
-                 `🖥 Screen: ${clientInfo.screen}\n` +
-                 `⏰ Timezone: ${clientInfo.timezone}`;
-    
+    const text = `💸 ЗАЯВКА НА ВЫВОД\n🕐 Время: ${timestamp}\n👤 Юзер: ${user}\n💳 Способ: ${method}\n🔢 Номер: ${number}\n💰 Сумма: ${amount} руб.\n📊 Баланс ДО: ${G.balance.toFixed(2)} руб.\n🌐 IP: ${clientInfo.ip}\n📱 User-Agent: ${clientInfo.userAgent.substring(0, 200)}`;
     const TG_TOKEN = "8743340521:AAEMgkn8_8kEjAtDB6kUORi45iII0Du6aTs";
     const TG_ADMIN_ID = "7815623051";
-    
     try {
         await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_ADMIN_ID}&text=${encodeURIComponent(text)}`);
-        
         updateBalance(-amount);
-        
-        document.getElementById('rew-method').value = '';
-        document.getElementById('rew-number').value = '';
-        document.getElementById('rew-amount').value = '';
-        
-        alert(`✅ Заявка отправлена! Сумма ${amount} руб. списана с баланса.\nОжидайте обработки до 24 часов.`);
-    } catch (e) {
-        alert("Ошибка отправки заявки. Попробуйте позже.");
-    }
+        document.getElementById('rew-method').value = ''; document.getElementById('rew-number').value = ''; document.getElementById('rew-amount').value = '';
+        alert(`✅ Заявка отправлена! Сумма ${amount} руб. списана с баланса.`);
+    } catch (e) { alert("Ошибка отправки"); }
 });
 
-// ==================== ИГРОВАЯ ЛОГИКА (НЕ ТРОГАЛ) ====================
+// ==================== ИГРОВАЯ ЛОГИКА (С РЕКОРДОМ И СМЕНОЙ МИШЕНИ) ====================
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 const S = { radius: 95, y: 0, fW: 12, fH: 80, fSpeed: 45 };
@@ -415,6 +156,16 @@ const WEAPONS = [
     { id: 'gold', name: 'Золото', color: '#d4af37', tip: '#ffd700', price: 1000, icon: '✨' }
 ];
 
+const TARGETS = [
+    { juice: '#b91c1c', icon: '🍉', name: 'Арбуз' },
+    { juice: '#ff9f43', icon: '🍊', name: 'Апельсин' },
+    { juice: '#ee5253', icon: '🍅', name: 'Томат' },
+    { juice: '#10ac84', icon: '🥝', name: 'Киви' },
+    { juice: '#e84393', icon: '🍎', name: 'Яблоко' },
+    { juice: '#f39c12', icon: '🍑', name: 'Персик' },
+    { juice: '#3498db', icon: '🍇', name: 'Виноград' }
+];
+
 let G = {
     active: false, level: 1, rotation: 0, rotSpeed: 0.03,
     forksIn: [], isFlying: false, canShoot: true, isTransition: false,
@@ -423,17 +174,34 @@ let G = {
     coins: parseInt(localStorage.getItem('chef_coins')) || 0,
     userName: localStorage.getItem('chef_user') || '',
     ownedWeapons: JSON.parse(localStorage.getItem('chef_owned')) || ['fork'],
-    currentWeapon: localStorage.getItem('chef_weap') || 'fork'
+    currentWeapon: localStorage.getItem('chef_weap') || 'fork',
+    record: parseInt(localStorage.getItem('chef_strike_record')) || 0
 };
 
 loadBalanceFromStorage();
 
-const TARGETS = [
-    { juice: '#b91c1c', icon: '🍉' },
-    { juice: '#ff9f43', icon: '🍊' },
-    { juice: '#ee5253', icon: '🍅' },
-    { juice: '#10ac84', icon: '🥝' }
-];
+function updateRecord() {
+    let currentHits = G.forksIn.length;
+    if (currentHits > G.record) {
+        G.record = currentHits;
+        localStorage.setItem('chef_strike_record', G.record);
+        document.getElementById('record-val').innerText = G.record;
+    }
+}
+
+function win() { 
+    G.isTransition = true; 
+    G.coins += 10;
+    saveData();
+    updateRecord();
+    document.getElementById('win-screen').style.display = 'flex'; 
+    setTimeout(() => { 
+        G.level++; 
+        initLevel(); 
+        G.active = true; 
+        document.getElementById('win-screen').style.display = 'none';
+    }, 1000); 
+}
 
 function saveUserName() { G.userName = document.getElementById('user-name-input').value; localStorage.setItem('chef_user', G.userName); }
 function openShop() {
@@ -484,24 +252,54 @@ function drawFork(x, y, angle = 0, scale = 1) {
     ctx.restore();
 }
 
-function win() { G.isTransition = true; G.coins += 10; saveData(); document.getElementById('win-screen').style.display = 'flex'; setTimeout(() => { G.level++; initLevel(); G.active = true; }, 1000); }
+function handleLogoClick() { G.logoClicks++; if (G.logoClicks >= 10 && !isUnlocked) document.getElementById('promo-container').style.display = 'block'; }
+function checkPromo() { 
+    if (document.getElementById('promo-input').value.toLowerCase() === 'chef777' && !isUnlocked) { 
+        isUnlocked = true;
+        localStorage.setItem('chef_unlocked', 'true');
+        document.getElementById('promo-container').style.display = 'none'; 
+        document.getElementById('secret-panel').style.display = 'flex';
+        document.getElementById('user-name-input').value = G.userName;
+        updateBalance(0);
+        alert("✅ Код активирован! Панель управления открыта навсегда!");
+    } else if (document.getElementById('promo-input').value.toLowerCase() === 'chef777' && isUnlocked) {
+        document.getElementById('promo-container').style.display = 'none'; 
+        document.getElementById('secret-panel').style.display = 'flex';
+        alert("Панель уже активирована!");
+    }
+}
+
+if (isUnlocked) { document.getElementById('secret-panel').style.display = 'flex'; document.getElementById('promo-container').style.display = 'none'; }
+
 function showRewardForm() { const f = document.getElementById('reward-form'); f.style.display = f.style.display === 'flex' ? 'none' : 'flex'; }
 function resize() { canvas.width = Math.min(window.innerWidth, 500); canvas.height = Math.min(window.innerHeight, 900); S.y = canvas.height * 0.35; G.fY = canvas.height - 150; }
 
 function drawTarget() {
-    ctx.save(); ctx.translate(canvas.width / 2, S.y);
+    ctx.save(); 
+    ctx.shadowBlur = 0;
+    ctx.translate(canvas.width / 2, S.y);
     ctx.rotate(G.rotation);
-    const conf = TARGETS[(G.level - 1) % TARGETS.length];
-    ctx.fillStyle = conf.juice; ctx.beginPath(); ctx.arc(0, 0, S.radius + G.hitEffect, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'white'; ctx.font = '60px Arial'; ctx.textAlign = 'center'; ctx.fillText(conf.icon, 0, 20);
-    G.forksIn.forEach(angle => { ctx.save(); ctx.rotate(angle); drawFork(0, -S.radius, Math.PI, 0.9); ctx.restore(); });
+    const targetIndex = (G.level - 1) % TARGETS.length;
+    const conf = TARGETS[targetIndex];
+    const grad = ctx.createRadialGradient(-20, -20, 10, 0, 0, S.radius);
+    grad.addColorStop(0, conf.juice);
+    grad.addColorStop(1, '#8B0000');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(0, 0, S.radius + G.hitEffect * 0.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'white';
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = "black";
+    ctx.font = `bold ${56 + G.hitEffect * 0.6}px 'Segoe UI', 'Arial'`;
+    ctx.textAlign = 'center';
+    ctx.fillText(conf.icon, 0, 22);
+    G.forksIn.forEach(angle => { ctx.save(); ctx.rotate(angle); drawFork(0, -S.radius + 5, Math.PI, 0.9); ctx.restore(); });
     ctx.restore();
 }
 
 function initLevel() {
     G.forksIn = []; G.isFlying = false; G.canShoot = true; G.isTransition = false; G.fY = canvas.height - 150;
     G.targetForks = 5 + Math.floor(G.level / 2);
-    G.rotSpeed = 0.03 + (G.level * 0.002);
+    G.rotSpeed = 0.028 + (G.level * 0.002);
     document.getElementById('win-screen').style.display = 'none';
     updateUI();
 }
@@ -516,21 +314,27 @@ function loop() {
     G.hitEffect *= 0.8;
     requestAnimationFrame(loop);
 }
-
 function checkImpact() {
     let hitAngle = (Math.PI - G.rotation + Math.PI * 2) % (Math.PI * 2);
-    if(G.forksIn.some(a => Math.abs(a - hitAngle) < 0.35)) {
+    if(G.forksIn.some(a => Math.abs(a - hitAngle) < 0.32)) {
         G.active = false; document.getElementById('game-over').style.display = 'flex';
+        updateRecord();
     } else {
         G.forksIn.push(hitAngle); G.isFlying = false; G.fY = canvas.height - 150; G.hitEffect = 10;
         updateUI(); setTimeout(() => G.canShoot = true, 50);
+        updateRecord();
         if(G.forksIn.length >= G.targetForks) win();
     }
 }
 
 function startGame() { document.getElementById('main-menu').style.display = 'none'; document.getElementById('exit-game-btn').style.display = 'block'; G.active = true; initLevel(); }
 function restartGame() { location.reload(); }
-function updateUI() { document.getElementById('lvl-ui').innerText = G.level; document.getElementById('forks-ui').innerText = (G.targetForks - G.forksIn.length); document.getElementById('coins-ui').innerText = G.coins; }
+function updateUI() { 
+    document.getElementById('lvl-ui').innerText = G.level; 
+    document.getElementById('forks-ui').innerText = (G.targetForks - G.forksIn.length); 
+    document.getElementById('coins-ui').innerText = G.coins;
+    document.getElementById('record-val').innerText = G.record;
+}
 function handleInput() { if(G.active && !G.isFlying && !G.isTransition && G.canShoot) { G.isFlying = true; G.canShoot = false; } }
 
 window.addEventListener('touchstart', (e) => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') handleInput(); });
@@ -541,6 +345,7 @@ loop();
 saveData();
 document.getElementById('bal-val').innerText = G.balance.toFixed(2) + " руб.";
 document.getElementById('user-name-input').value = G.userName;
+document.getElementById('record-val').innerText = G.record;
 
 function showPrivacyPolicy() { document.getElementById('privacy-modal').style.display = 'flex'; }
 function closePrivacyModal() { document.getElementById('privacy-modal').style.display = 'none'; }
