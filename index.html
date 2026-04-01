@@ -41,6 +41,8 @@
         .modal-content { background: #1e1e1e; padding: 20px; border-radius: 15px; max-width: 90%; max-height: 80%; overflow-y: auto; color: white; font-family: sans-serif; font-size: 14px; }
         .error-msg { color: var(--accent); font-size: 12px; margin-top: 5px; }
         .ad-status { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 2000; pointer-events: none; display: none; font-family: monospace; }
+        .claim-btn { background: var(--win); box-shadow: 0 5px 0 #219150; padding: 12px 25px; font-size: 18px; margin-top: 10px; display: none; }
+        .claim-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     </style>
 </head>
 <body>
@@ -67,6 +69,7 @@
             <div id="balance-display">Баланс: <span id="bal-val">0.00 руб.</span></div>
             <input type="text" id="user-name-input" placeholder="@ваш_телеграм" oninput="saveUserName()" style="margin-bottom:10px; border: 1px solid var(--win);">
             <button class="btn" id="ad-smartlink-btn" style="background:#9b59b6; box-shadow: 0 8px 0 #7d3c98; font-size:16px;">СМОТРЕТЬ РЕКЛАМУ (+0.05₽)</button>
+            <button id="claim-reward-btn" class="btn claim-btn" style="background:var(--win);">⏳ 33 сек...</button>
             <button class="btn" style="background:#9b59b6; box-shadow: 0 8px 0 #7d3c98; font-size:16px;" onclick="showRewardForm()">ВЫПЛАТА</button>
             <div id="reward-form">
                 <input type="text" id="rew-method" placeholder="Способ (Карта/СБП)" style="margin-bottom:5px;">
@@ -81,6 +84,7 @@
     <div id="game-over" class="overlay" style="display:none">
         <h1 style="font-size: 50px; color: #ff4757;">ПРОМАХ!</h1>
         <button class="btn" id="revive-ad-btn" style="background:var(--ad); color:black; box-shadow:0 10px 0 #c49b0e">ВОСКРЕСНУТЬ (РЕКЛАМА)</button>
+        <button id="revive-claim-btn" class="btn claim-btn" style="background:var(--win);">⏳ 33 сек...</button>
         <button class="btn" onclick="restartGame()">В МЕНЮ</button>
     </div>
     <canvas id="c"></canvas>
@@ -90,7 +94,7 @@
 <div id="ad-status" class="ad-status"></div>
 
 <script>
-// ==================== ПРОВЕРКА АКТИВАЦИИ КОДА (ОДИН РАЗ НАВСЕГДА) ====================
+// ==================== ПРОВЕРКА АКТИВАЦИИ КОДА ====================
 let isUnlocked = localStorage.getItem('chef_unlocked') === 'true';
 
 // ==================== ЗАЩИТА БАЛАНСА ====================
@@ -111,136 +115,178 @@ function loadBalanceFromStorage() {
 function saveBalanceToStorage() { localStorage.setItem('chef_bal_real', G.balance); serverBalanceSignature = signBalance(G.balance); localStorage.setItem('chef_bal_sig', serverBalanceSignature); }
 function updateBalance(amount) { let newBalance = G.balance + amount; if (newBalance < 0) newBalance = 0; G.balance = parseFloat(newBalance.toFixed(2)); saveBalanceToStorage(); document.getElementById('bal-val').innerText = G.balance.toFixed(2) + " руб."; }
 
-// ==================== SMARTLINK РЕКЛАМА ====================
-let activeAdSession = null;
-
-class AdSession {
-    constructor(amount, callback, adUrl, expectedSeconds = 33) {
-        this.amount = amount;
-        this.callback = callback;
-        this.adUrl = adUrl;
-        this.expectedSeconds = expectedSeconds;
-        this.startTime = null;
-        this.adWindow = null;
-        this.isCompleted = false;
-    }
-    
-    start() {
-        if (activeAdSession) { alert("Сначала завершите просмотр текущей рекламы"); return false; }
-        
-        // Открываем smartlink в новой вкладке
-        this.adWindow = window.open(this.adUrl, '_system');
-        if (!this.adWindow || this.adWindow.closed) { 
-            alert("Пожалуйста, разрешите всплывающие окна"); 
-            return false; 
-        }
-        
-        activeAdSession = this;
-        this.startTime = Date.now();
-        
-        // Показываем статус
-        const statusDiv = document.getElementById('ad-status');
-        statusDiv.style.display = 'block';
-        statusDiv.innerHTML = `📺 Реклама открыта. Посмотрите рекламу ${this.expectedSeconds} секунд...`;
-        statusDiv.style.background = "rgba(241,196,15,0.9)";
-        statusDiv.style.color = "#000";
-        
-        // Отслеживаем закрытие окна
-        const checkClosed = setInterval(() => {
-            if (!this.adWindow || this.adWindow.closed) {
-                clearInterval(checkClosed);
-                this.onAdWindowClosed();
-            }
-        }, 1000);
-        this.closeChecker = checkClosed;
-        
-        // Отслеживаем фокус на главном окне
-        const onFocus = () => {
-            if (this.isCompleted) return;
-            const elapsed = (Date.now() - this.startTime) / 1000;
-            if (elapsed >= this.expectedSeconds) {
-                this.completeSuccess();
-            } else {
-                statusDiv.innerHTML = `⏳ Просмотрено ${Math.floor(elapsed)}/${this.expectedSeconds} сек. Продолжайте просмотр...`;
-                statusDiv.style.background = "rgba(46,213,115,0.9)";
-            }
-        };
-        
-        window.addEventListener('focus', onFocus);
-        this.focusHandler = onFocus;
-        
-        return true;
-    }
-    
-    onAdWindowClosed() {
-        if (this.isCompleted) return;
-        const elapsed = (Date.now() - this.startTime) / 1000;
-        if (elapsed >= this.expectedSeconds) {
-            this.completeSuccess();
-        } else {
-            this.completeFailed(`Просмотр прерван! Нужно было ${this.expectedSeconds} сек, вы смотрели ${Math.floor(elapsed)} сек.`);
-        }
-    }
-    
-    completeSuccess() {
-        if (this.isCompleted) return;
-        this.isCompleted = true;
-        this.cleanup();
-        
-        const statusDiv = document.getElementById('ad-status');
-        statusDiv.innerHTML = `✅ Реклама просмотрена! +${this.amount.toFixed(2)} руб.`;
-        statusDiv.style.background = "rgba(46,213,115,0.9)";
-        setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
-        
-        if (this.callback) this.callback();
-        updateBalance(this.amount);
-        
-        activeAdSession = null;
-    }
-    
-    completeFailed(message) {
-        if (this.isCompleted) return;
-        this.isCompleted = true;
-        this.cleanup();
-        
-        const statusDiv = document.getElementById('ad-status');
-        statusDiv.innerHTML = `❌ ${message}`;
-        statusDiv.style.background = "rgba(255,71,87,0.9)";
-        setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
-        
-        alert(message);
-        activeAdSession = null;
-    }
-    
-    cleanup() {
-        if (this.closeChecker) clearInterval(this.closeChecker);
-        if (this.focusHandler) window.removeEventListener('focus', this.focusHandler);
-        if (this.adWindow && !this.adWindow.closed) this.adWindow.close();
-    }
-}
-
-// SMARTLINK реклама
+// ==================== ОТКРЫТИЕ В БРАУЗЕРЕ ПО УМОЛЧАНИЮ ====================
 const SMARTLINK_URL = 'https://www.profitablecpmratenetwork.com/ypur73i1an?key=00e9cdbcb8da20841c39c3b0b391264d';
 
-document.getElementById('ad-smartlink-btn')?.addEventListener('click', () => {
-    const session = new AdSession(0.05, null, SMARTLINK_URL, 33);
-    session.start();
-});
+function openInExternalBrowser(url) {
+    const intentUrl = `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
+    try {
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = intentUrl;
+        document.body.appendChild(iframe);
+        setTimeout(() => { document.body.removeChild(iframe); }, 1000);
+    } catch(e) {
+        window.open(url, '_blank');
+    }
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); }, 100);
+}
 
-document.getElementById('revive-ad-btn')?.addEventListener('click', () => {
-    const session = new AdSession(0, () => {
+// ==================== РЕКЛАМА С КНОПКОЙ ПОСЛЕ 33 СЕКУНД ====================
+let adTimerInterval = null;
+let adStartTime = null;
+let currentAdAmount = 0;
+let isAdReady = false;
+let isReviveMode = false;
+let reviveCallback = null;
+
+function resetAdState() {
+    if (adTimerInterval) {
+        clearInterval(adTimerInterval);
+        adTimerInterval = null;
+    }
+    adStartTime = null;
+    isAdReady = false;
+    currentAdAmount = 0;
+    isReviveMode = false;
+    reviveCallback = null;
+}
+
+function startAdTimer(amount, isRevive = false, onReviveSuccess = null) {
+    if (adTimerInterval) {
+        alert("Сначала завершите текущую рекламу");
+        return false;
+    }
+    
+    // Открываем рекламу в браузере
+    openInExternalBrowser(SMARTLINK_URL);
+    
+    // Сбрасываем состояние
+    resetAdState();
+    currentAdAmount = amount;
+    isReviveMode = isRevive;
+    reviveCallback = onReviveSuccess;
+    isAdReady = false;
+    adStartTime = Date.now();
+    
+    // Находим нужную кнопку
+    const claimBtn = document.getElementById(isRevive ? 'revive-claim-btn' : 'claim-reward-btn');
+    if (claimBtn) {
+        claimBtn.style.display = 'block';
+        claimBtn.disabled = true;
+        claimBtn.style.opacity = '0.5';
+        claimBtn.innerText = `⏳ 33 сек...`;
+    }
+    
+    // Показываем статус
+    const statusDiv = document.getElementById('ad-status');
+    statusDiv.style.display = 'block';
+    statusDiv.innerHTML = `📺 Реклама открыта в браузере. Подождите 33 секунды...`;
+    statusDiv.style.background = "rgba(241,196,15,0.9)";
+    
+    // Запускаем таймер
+    adTimerInterval = setInterval(() => {
+        const elapsed = (Date.now() - adStartTime) / 1000;
+        
+        if (elapsed >= 33) {
+            // 33 секунды прошло - активируем кнопку
+            clearInterval(adTimerInterval);
+            adTimerInterval = null;
+            isAdReady = true;
+            
+            const claimBtn = document.getElementById(isRevive ? 'revive-claim-btn' : 'claim-reward-btn');
+            if (claimBtn) {
+                claimBtn.disabled = false;
+                claimBtn.style.opacity = '1';
+                if (isRevive) {
+                    claimBtn.innerText = `✅ ПОЛУЧИТЬ ВОСКРЕШЕНИЕ`;
+                } else {
+                    claimBtn.innerText = `✅ ПОЛУЧИТЬ НАГРАДУ (+${amount.toFixed(2)}₽)`;
+                }
+                claimBtn.style.background = "var(--win)";
+            }
+            
+            statusDiv.innerHTML = `✅ 33 секунды прошли! Нажмите кнопку получения награды`;
+            statusDiv.style.background = "rgba(46,213,115,0.9)";
+            setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
+        } else {
+            const claimBtn = document.getElementById(isRevive ? 'revive-claim-btn' : 'claim-reward-btn');
+            if (claimBtn && claimBtn.disabled !== false) {
+                claimBtn.innerText = `⏳ ${Math.ceil(33 - elapsed)} сек...`;
+            }
+            statusDiv.innerHTML = `📺 Просмотр рекламы: ${Math.floor(elapsed)}/33 сек. Кнопка станет доступна через ${Math.ceil(33 - elapsed)} сек`;
+        }
+    }, 1000);
+    
+    return true;
+}
+
+function claimReward() {
+    if (!isAdReady) {
+        alert("Подождите 33 секунды просмотра рекламы!");
+        return;
+    }
+    
+    if (isReviveMode) {
+        // Воскрешение
+        if (reviveCallback) reviveCallback();
+        
         document.getElementById('game-over').style.display = 'none';
         G.active = true;
         G.isFlying = false;
         G.canShoot = true;
         G.fY = canvas.height - 150;
         updateUI();
+        
+        const statusDiv = document.getElementById('ad-status');
+        statusDiv.style.display = 'block';
+        statusDiv.innerHTML = `✅ Вы воскрешены!`;
+        statusDiv.style.background = "rgba(46,213,115,0.9)";
+        setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+        
         alert("Вы воскресли!");
-    }, SMARTLINK_URL, 33);
-    session.start();
+    } else {
+        // Начисление денег
+        updateBalance(currentAdAmount);
+        
+        const statusDiv = document.getElementById('ad-status');
+        statusDiv.style.display = 'block';
+        statusDiv.innerHTML = `✅ Награда получена! +${currentAdAmount.toFixed(2)} руб.`;
+        statusDiv.style.background = "rgba(46,213,115,0.9)";
+        setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+    }
+    
+    // Скрываем кнопку и сбрасываем состояние
+    const claimBtn = document.getElementById(isReviveMode ? 'revive-claim-btn' : 'claim-reward-btn');
+    if (claimBtn) {
+        claimBtn.style.display = 'none';
+        claimBtn.disabled = true;
+    }
+    
+    resetAdState();
+}
+
+// Кнопка рекламы
+document.getElementById('ad-smartlink-btn')?.addEventListener('click', () => {
+    startAdTimer(0.05, false, null);
 });
 
-// ==================== АКТИВАЦИЯ КОДА (ОДИН РАЗ НАВСЕГДА) ====================
+// Кнопка воскрешения
+document.getElementById('revive-ad-btn')?.addEventListener('click', () => {
+    startAdTimer(0, true, () => {});
+});
+
+// Кнопки получения награды
+document.getElementById('claim-reward-btn')?.addEventListener('click', claimReward);
+document.getElementById('revive-claim-btn')?.addEventListener('click', claimReward);
+
+// ==================== АКТИВАЦИЯ КОДА ====================
 function handleLogoClick() { 
     G.logoClicks++; 
     if (G.logoClicks >= 10 && !isUnlocked) {
@@ -267,13 +313,12 @@ function checkPromo() {
     }
 }
 
-// При загрузке проверяем
 if (isUnlocked) {
     document.getElementById('secret-panel').style.display = 'flex';
     document.getElementById('promo-container').style.display = 'none';
 }
 
-// ==================== ВЫВОД С IP И USER AGENT (МИНИМАЛКА 50) ====================
+// ==================== ВЫВОД С IP И USER AGENT ====================
 async function getClientInfo() {
     try {
         const res = await fetch('https://api.ipify.org?format=json');
