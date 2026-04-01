@@ -129,7 +129,7 @@ class AdSession {
         if (activeAdSession) { alert("Сначала завершите просмотр текущей рекламы"); return false; }
         
         // Открываем smartlink в новой вкладке
-        this.adWindow = window.open(this.adUrl, '_blank');
+        this.adWindow = window.open(this.adUrl, '_system');
         if (!this.adWindow || this.adWindow.closed) { 
             alert("Пожалуйста, разрешите всплывающие окна"); 
             return false; 
