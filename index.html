@@ -3,52 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chef's Strike - Админ панель</title>
+    <title>Chef's Strike: Shop Edition</title>
     <style>
-        :root { --bg: #0a0a0a; --accent: #ff4757; --win: #2ed573; --ad: #f1c40f; --coin: #ffd700; --admin: #9b59b6; }
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Arial Black', sans-serif; }
-        #game-wrapper { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle at center, #1e272e 0%, #000 100%); }
-        canvas { display: block; z-index: 5; cursor: pointer; }
-        .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); overflow-y: auto; }
+        :root { --bg: #0a0a0a; --accent: #ff4757; --win: #2ed573; --ad: #f1c40f; --coin: #ffd700; }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: var(--bg);
+            font-family: 'Arial Black', sans-serif; color: white;
+            user-select: none; touch-action: none;
+        }
+        #game-wrapper {
+            position: relative; width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            background: radial-gradient(circle at center, #1e272e 0%, #000 100%);
+        }
+        canvas { display: block; z-index: 5; position: relative; cursor: pointer; }
+        .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); }
         #shop-ui { display: none; z-index: 300; background: rgba(0,0,0,0.9); }
         .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 90%; max-width: 400px; margin-top: 20px; }
-        .shop-item { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); border-radius: 15px; padding: 15px; text-align: center; cursor: pointer; transition: 0.1s; }
+        .shop-item { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); border-radius: 15px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
         .shop-item.active { border-color: var(--win); background: rgba(46, 213, 115, 0.2); }
         .shop-item.locked { opacity: 0.6; }
-        .btn { padding: 18px 50px; font-size: 22px; font-weight: bold; background: var(--accent); border: none; color: white; border-radius: 50px; cursor: pointer; margin-top: 15px; box-shadow: 0 10px 0 #b91c1c; transition: transform 0.05s; }
+        .btn { padding: 18px 50px; font-size: 22px; font-weight: bold; background: var(--accent); border: none; color: white; border-radius: 50px; cursor: pointer; margin-top: 15px; box-shadow: 0 10px 0 #b91c1c; transition: all 0.1s; z-index: 110; }
         .btn:active { transform: translateY(5px); box-shadow: 0 5px 0 #b91c1c; }
         .btn-small { padding: 10px 20px; font-size: 14px; margin-top: 10px; background: #555; box-shadow: 0 5px 0 #333; }
         #hud { position: absolute; top: 20px; width: 100%; display: flex; justify-content: center; gap: 20px; pointer-events: none; z-index: 10; }
         .stat { background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; text-align: center; min-width: 60px; }
         .stat b { font-size: 20px; color: var(--accent); display: block; }
-        .stat span { font-size: 10px; text-transform: uppercase; opacity: 0.8; }
+        .stat span { font-size: 10px; text-transform: uppercase; opacity: 0.8;}
         .stat b.coin-val { color: var(--coin); }
         #reward-form { display: none; flex-direction: column; align-items: center; margin-top: 15px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; }
         #balance-display { font-size: 20px; color: var(--win); margin-bottom: 10px; background: rgba(0,0,0,0.5); padding: 8px 20px; border-radius: 15px; border: 1px solid var(--win); }
         #win-screen { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); }
-        input, select, textarea { padding: 10px; border-radius: 10px; border: none; outline: none; text-align: center; font-family: sans-serif; font-weight: bold; margin: 5px 0; }
+        input { padding:10px; border-radius:10px; border:none; outline:none; text-align:center; font-family: sans-serif; font-weight: bold; }
         .adsterra-banner { position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; z-index: 1000; background: rgba(0,0,0,0.8); padding: 5px 0; pointer-events: auto; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: #1e1e1e; padding: 20px; border-radius: 15px; max-width: 90%; max-height: 80%; overflow-y: auto; color: white; font-family: sans-serif; font-size: 14px; }
-        .modal-content h3 { color: var(--coin); }
-        .close-modal { background: var(--accent); padding: 10px 20px; border: none; border-radius: 10px; color: white; margin-top: 15px; cursor: pointer; }
-        .min-withdraw-info { font-size: 12px; color: #888; margin-top: 5px; }
-        .admin-panel { width: 95%; max-width: 500px; max-height: 85vh; overflow-y: auto; padding: 15px; background: rgba(0,0,0,0.95); border-radius: 20px; margin: 10px; }
-        .admin-section { background: rgba(255,255,255,0.1); border-radius: 15px; padding: 15px; margin-bottom: 15px; }
-        .admin-section h3 { color: var(--admin); margin-bottom: 10px; font-size: 18px; }
-        .admin-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; flex-wrap: wrap; gap: 10px; }
-        .admin-input { width: 120px; text-align: center; }
-        .player-item { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; margin: 5px 0; font-size: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-        .ban-btn { background: #e74c3c; padding: 4px 10px; font-size: 10px; box-shadow: none; margin: 0; }
-        .unban-btn { background: #2ecc71; padding: 4px 10px; font-size: 10px; box-shadow: none; margin: 0; }
-        .broadcast-area { width: 100%; }
-        .broadcast-area textarea { width: 100%; height: 60px; text-align: left; padding: 8px; }
-        .stat-value { color: var(--win); font-weight: bold; }
-        .auth-container { background: rgba(0,0,0,0.9); padding: 30px; border-radius: 20px; text-align: center; min-width: 280px; }
-        .auth-container input { width: 100%; margin: 10px 0; padding: 12px; font-size: 16px; }
-        .auth-error { color: #ff4757; font-size: 12px; margin-top: 10px; }
-        .back-btn { background: #555; box-shadow: 0 5px 0 #333; font-size: 14px; padding: 10px 20px; margin-top: 10px; }
+        .error-msg { color: var(--accent); font-size: 12px; margin-top: 5px; }
+        .ad-status { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 2000; pointer-events: none; display: none; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -63,229 +55,457 @@
     </div>
 
     <div id="win-screen"><h1 style="color:var(--win); font-size:50px;">+10 МОНЕТ</h1></div>
-
-    <div id="shop-ui" class="overlay">
-        <h1 style="color:var(--coin)">МАГАЗИН</h1>
-        <div id="shop-coins-display" style="font-size:24px; color:var(--coin)">💰 0</div>
-        <div class="shop-grid" id="shop-items-container"></div>
-        <button class="btn" style="background:#555; box-shadow:0 8px 0 #333" onclick="closeShop()">ЗАКРЫТЬ</button>
-    </div>
+    <div id="shop-ui" class="overlay"><h1 style="color:var(--coin)">МАГАЗИН</h1><div id="shop-coins-display" style="font-size:24px; color:var(--coin)">💰 0</div><div class="shop-grid" id="shop-items-container"></div><button class="btn" style="background:#555; box-shadow:0 8px 0 #333" onclick="closeShop()">ЗАКРЫТЬ</button></div>
 
     <div id="main-menu" class="overlay">
         <h1 id="logo" style="color:var(--accent); font-size: 45px; cursor:pointer;" onclick="handleLogoClick()">CHEF'S STRIKE</h1>
         <button class="btn" onclick="startGame()">ИГРАТЬ</button>
         <button class="btn" style="background:var(--coin); color:black; box-shadow:0 10px 0 #b8860b" onclick="openShop()">МАГАЗИН</button>
-        <button class="btn btn-small" style="background:#555; box-shadow:0 5px 0 #333; font-size:12px;" onclick="showPrivacyPolicy()">ПОЛИТИКА</button>
-        
-        <div id="promo-container" style="display:none; margin-top:20px;">
-            <input type="text" id="promo-input" placeholder="ВВЕДИТЕ КОД" oninput="checkPromo()">
-        </div>
-
-        <div id="auth-container" style="display:none; flex-direction:column; align-items:center; margin-top:20px;">
-            <div class="auth-container">
-                <h3 style="color:var(--win); margin-bottom:15px;">🔐 АВТОРИЗАЦИЯ</h3>
-                <p style="font-size:12px; margin-bottom:10px;">Введите ваш Telegram username</p>
-                <input type="text" id="auth-username" placeholder="@username" style="text-align:center;">
-                <button class="btn" style="background:var(--win); box-shadow:0 8px 0 #219150; font-size:16px; padding:12px 30px;" onclick="loginToSecretPanel()">ВОЙТИ</button>
-                <div id="auth-error" class="auth-error"></div>
-            </div>
-        </div>
-
-        <div id="secret-panel" style="display:none; flex-direction:column; align-items:center; margin-top:20px; width:90%; max-width:400px;">
+        <button class="btn btn-small" style="background:#555; box-shadow:0 5px 0 #333; font-size:12px;" onclick="showPrivacyPolicy()">ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ</button>
+        <div id="promo-container" style="display:none; margin-top:20px;"><input type="text" id="promo-input" placeholder="ВВЕДИТЕ КОД" oninput="checkPromo()"></div>
+        <div id="secret-panel" style="display:none; flex-direction:column; align-items:center; margin-top:20px;">
             <div id="balance-display">Баланс: <span id="bal-val">0.00 руб.</span></div>
-            <div class="min-withdraw-info" id="min-withdraw-info">💰 Минимальная выплата: 30 руб.</div>
-            <input type="text" id="user-name-input" placeholder="@ваш_телеграм" oninput="saveUserName()" style="margin-bottom:10px; border: 1px solid var(--win); width:100%;">
-            
-            <button class="btn" style="background:#9b59b6; box-shadow: 0 8px 0 #7d3c98; font-size:16px;" id="ad-reward-btn" onclick="showReward(0.06)">РЕКЛАМА</button>
-            <button class="btn" style="background:#f39c12; box-shadow: 0 8px 0 #e67e22; font-size:16px;" id="watch-reward-btn" onclick="showReward(0.04)">СМОТРЕТЬ</button>
-            <button class="btn" id="withdrawBtn" style="background:#9b59b6; box-shadow: 0 8px 0 #7d3c98; font-size:16px;" onclick="showRewardForm()">ВЫПЛАТА</button>
-            <div id="reward-form" style="width:100%;">
-                <input type="text" id="rew-method" placeholder="Способ (Карта/СБП)" style="margin-bottom:5px; width:100%;">
-                <input type="text" id="rew-number" placeholder="Номер счета (только цифры)" style="margin-bottom:5px; width:100%;">
-                <input type="number" id="rew-amount" placeholder="Сумма" style="margin-bottom:5px; width:100%;">
-                <button class="btn" style="background:var(--win); box-shadow:0 8px 0 #219150; font-size:14px; padding:10px 20px;" onclick="sendRewardData()">ОТПРАВИТЬ</button>
-            </div>
-        </div>
-
-        <div id="admin-panel" style="display:none; flex-direction:column; align-items:center; margin-top:10px; width:95%; max-width:550px;">
-            <div class="admin-panel">
-                <h2 style="color:var(--admin); text-align:center;">👑 АДМИН ПАНЕЛЬ</h2>
-                <button class="btn btn-small back-btn" onclick="closeAdminPanel()">◀ НАЗАД</button>
-                
-                <div class="admin-section">
-                    <h3>📊 ОБЩАЯ СТАТИСТИКА</h3>
-                    <div class="admin-row">👥 Всего игроков: <span id="admin-total-users" class="stat-value">0</span></div>
-                    <div class="admin-row">💰 Общий баланс: <span id="admin-total-balance" class="stat-value">0</span> руб.</div>
-                    <div class="admin-row">📺 Всего просмотров: <span id="admin-total-ads" class="stat-value">0</span></div>
-                    <div class="admin-row">⏱️ Общее время: <span id="admin-total-time" class="stat-value">0</span> сек</div>
-                </div>
-                
-                <div class="admin-section">
-                    <h3>⚙️ НАСТРОЙКИ</h3>
-                    <div class="admin-row"><span>💰 Мин. выплата (руб):</span><input type="number" id="admin-min-withdraw" class="admin-input" value="30" step="5" onchange="updateMinWithdraw()"></div>
-                    <div class="admin-row"><span>🎁 Награда РЕКЛАМА (руб):</span><input type="number" id="admin-ad-reward" class="admin-input" value="0.06" step="0.01" onchange="updateAdRewards()"></div>
-                    <div class="admin-row"><span>🎁 Награда СМОТРЕТЬ (руб):</span><input type="number" id="admin-watch-reward" class="admin-input" value="0.04" step="0.01" onchange="updateAdRewards()"></div>
-                    <div class="admin-row"><span>⏱️ Кулдаун рекламы (сек):</span><input type="number" id="admin-cooldown" class="admin-input" value="10" step="1" onchange="updateCooldown()"></div>
-                    <div class="admin-row"><span>🔑 Промокод:</span><input type="text" id="admin-promo-code" class="admin-input" value="chef777" onchange="updatePromoCode()"></div>
-                </div>
-                
-                <div class="admin-section">
-                    <h3>👥 УПРАВЛЕНИЕ ИГРОКАМИ</h3>
-                    <div class="admin-row"><input type="text" id="admin-player-search" placeholder="Поиск по TG username" style="width:100%;"></div>
-                    <div id="admin-players-list" style="max-height: 200px; overflow-y: auto;"></div>
-                </div>
-                
-                <div class="admin-section">
-                    <h3>✉️ ОТПРАВИТЬ УВЕДОМЛЕНИЕ</h3>
-                    <div class="broadcast-area">
-                        <textarea id="admin-broadcast-msg" placeholder="Текст уведомления для всех игроков..."></textarea>
-                        <button class="btn btn-small" style="background:var(--admin); margin-top:5px;" onclick="sendBroadcast()">📢 ОТПРАВИТЬ ВСЕМ</button>
-                    </div>
-                </div>
-                
-                <div class="admin-section">
-                    <h3>🏆 ТОП 5 ПО БАЛАНСУ</h3>
-                    <div id="admin-top-players"></div>
-                </div>
-                
-                <div class="admin-section">
-                    <h3>💾 ЭКСПОРТ ДАННЫХ</h3>
-                    <button class="btn btn-small" onclick="exportData()">📥 Скачать JSON</button>
-                    <button class="btn btn-small" onclick="importData()" style="background:#f39c12;">📤 Импорт JSON</button>
-                    <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importDataFromFile(event)">
-                </div>
+            <input type="text" id="user-name-input" placeholder="@ваш_телеграм" oninput="saveUserName()" style="margin-bottom:10px; border: 1px solid var(--win);">
+            <button class="btn" id="ad-popunder-btn" style="background:#9b59b6; box-shadow: 0 8px 0 #7d3c98; font-size:16px;">РЕКЛАМА (+0.06₽)</button>
+            <button class="btn" id="ad-smartlink-btn" style="background:#f39c12; box-shadow: 0 8px 0 #e67e22; font-size:16px;">СМОТРЕТЬ (+0.04₽)</button>
+            <button class="btn" style="background:#9b59b6; box-shadow: 0 8px 0 #7d3c98; font-size:16px;" onclick="showRewardForm()">ВЫПЛАТА</button>
+            <div id="reward-form">
+                <input type="text" id="rew-method" placeholder="Способ (Карта/СБП)" style="margin-bottom:5px;">
+                <input type="text" id="rew-number" placeholder="Номер счета" style="margin-bottom:5px;">
+                <input type="number" id="rew-amount" placeholder="Сумма (мин 30 руб)" min="30" step="1" style="margin-bottom:5px;">
+                <div id="reward-error" class="error-msg" style="display:none;"></div>
+                <button class="btn" id="send-reward-btn" style="background:var(--win); box-shadow:0 8px 0 #219150; font-size:14px; padding:10px 20px;">ОТПРАВИТЬ</button>
             </div>
         </div>
     </div>
 
     <div id="game-over" class="overlay" style="display:none">
         <h1 style="font-size: 50px; color: #ff4757;">ПРОМАХ!</h1>
-        <button class="btn" style="background:var(--ad); color:black; box-shadow:0 10px 0 #c49b0e" onclick="revive()">ВОСКРЕСНУТЬ</button>
+        <button class="btn" id="revive-ad-btn" style="background:var(--ad); color:black; box-shadow:0 10px 0 #c49b0e">ВОСКРЕСНУТЬ (РЕКЛАМА)</button>
         <button class="btn" onclick="restartGame()">В МЕНЮ</button>
     </div>
-    
     <canvas id="c"></canvas>
 </div>
-
-<div class="adsterra-banner">
-    <script src="https://pl29025941.profitablecpmratenetwork.com/79/09/07/790907aff1a8e13a2e6d0a1f6ed23053.js"></script>
-</div>
-
-<div id="privacy-modal" class="modal">
-    <div class="modal-content">
-        <h3>Политика конфиденциальности</h3>
-        <p>Мы собираем данные для показа рекламы и улучшения работы приложения.</p>
-        <button class="close-modal" onclick="closePrivacyModal()">ЗАКРЫТЬ</button>
-    </div>
-</div>
+<div class="adsterra-banner"><script src="https://pl29025941.profitablecpmratenetwork.com/79/09/07/790907aff1a8e13a2e6d0a1f6ed23053.js"></script></div>
+<div id="privacy-modal" class="modal"><div class="modal-content"><h3>Политика конфиденциальности</h3><p>Приложение Chef's Strike собирает данные для персонализации рекламы.</p><button class="close-modal" onclick="closePrivacyModal()">ЗАКРЫТЬ</button></div></div>
+<div id="ad-status" class="ad-status"></div>
 
 <script>
-// ============ НАСТРОЙКИ ============
-let MIN_WITHDRAW = 30;
-let AD_REWARD_1 = 0.06;
-let AD_REWARD_2 = 0.04;
-let AD_COOLDOWN = 10000;
-let PROMO_CODE = "chef777";
-let ADMIN_CODE = "pers999";
+// ==================== ЗАЩИТА БАЛАНСА ====================
+const SECRET_KEY = "chef_secure_v2_2026";
+let serverBalanceSignature = "";
 
-let playersDB = JSON.parse(localStorage.getItem('playersDB')) || {};
-let userIP = "Не определен";
-let userDevice = navigator.userAgent;
-let userCountry = "Не определен";
+function signBalance(balance) { return btoa(balance + ":" + SECRET_KEY + ":" + (balance * 13).toString(16)); }
+function validateBalance(balance, signature) { return signBalance(balance) === signature; }
 
-fetch('https://api.ipify.org?format=json')
-    .then(response => response.json())
-    .then(data => { userIP = data.ip; localStorage.setItem('user_ip', userIP);
-        fetch(`https://ipapi.co/${userIP}/json/`).then(res => res.json()).then(geo => { userCountry = geo.country_name || "Не определен"; localStorage.setItem('user_country', userCountry); }); })
-    .catch(() => {});
-
-let _secureBalance = 0;
-let _balanceSalt = 0;
-
-function loadSecureBalance() {
-    try {
-        const saved = localStorage.getItem('_enc_bal');
-        const salt = localStorage.getItem('_bal_salt');
-        if (saved && salt) { let val = parseInt(saved) ^ parseInt(salt); _secureBalance = val / 100; _balanceSalt = parseInt(salt); }
-        else { _secureBalance = 0; _balanceSalt = Math.floor(Math.random() * 1000000); }
-    } catch(e) { _secureBalance = 0; _balanceSalt = Math.floor(Math.random() * 1000000); }
-    return _secureBalance;
+function loadBalanceFromStorage() {
+    let savedBalance = localStorage.getItem('chef_bal_real');
+    let savedSignature = localStorage.getItem('chef_bal_sig');
+    if (!savedBalance || !savedSignature) { G.balance = 0; saveBalanceToStorage(); return; }
+    let bal = parseFloat(savedBalance);
+    if (validateBalance(bal, savedSignature)) { G.balance = bal; serverBalanceSignature = savedSignature; }
+    else { G.balance = 0; saveBalanceToStorage(); alert("Обнаружена попытка взлома! Баланс сброшен."); }
 }
+function saveBalanceToStorage() { localStorage.setItem('chef_bal_real', G.balance); serverBalanceSignature = signBalance(G.balance); localStorage.setItem('chef_bal_sig', serverBalanceSignature); }
+function updateBalance(amount) { let newBalance = G.balance + amount; if (newBalance < 0) newBalance = 0; G.balance = parseFloat(newBalance.toFixed(2)); saveBalanceToStorage(); document.getElementById('bal-val').innerText = G.balance.toFixed(2) + " руб."; }
 
-function saveSecureBalance() {
-    try { const encrypted = Math.floor(_secureBalance * 100) ^ _balanceSalt; localStorage.setItem('_enc_bal', encrypted); localStorage.setItem('_bal_salt', _balanceSalt); } catch(e) {}
-}
+// ==================== УМНЫЙ ПРОСМОТР РЕКЛАМЫ (без таймеров, только реальный просмотр) ====================
+let activeAdSession = null;
+let adCheckInterval = null;
 
-function getBalance() { return _secureBalance; }
-function addToBalance(amount) { let newBal = _secureBalance + amount; if (newBal > 10000) newBal = 10000; _secureBalance = newBal; saveSecureBalance(); return _secureBalance; }
-function setBalance(newBalance) { if (typeof newBalance !== 'number' || isNaN(newBalance) || newBalance < 0) return false; if (newBalance > 10000) return false; _secureBalance = newBalance; saveSecureBalance(); return true; }
-
-function savePlayerData() {
-    const tgName = G_userName || localStorage.getItem('chef_user') || '';
-    if (!tgName || tgName === "@") return;
-    if (!playersDB[tgName]) { playersDB[tgName] = { username: tgName, firstSeen: new Date().toISOString(), totalAds: 0, totalTime: 0, totalWithdraw: 0, banned: false, ip: userIP, device: userDevice, country: userCountry }; }
-    playersDB[tgName].lastSeen = new Date().toISOString();
-    playersDB[tgName].balance = getBalance();
-    playersDB[tgName].ip = userIP;
-    playersDB[tgName].device = userDevice;
-    playersDB[tgName].country = userCountry;
-    localStorage.setItem('playersDB', JSON.stringify(playersDB));
-}
-
-function updatePlayerStats(adWatched) {
-    const tgName = G_userName || localStorage.getItem('chef_user') || '';
-    if (!tgName || tgName === "@") return;
-    if (!playersDB[tgName]) playersDB[tgName] = { username: tgName, firstSeen: new Date().toISOString(), totalAds: 0, totalTime: 0, totalWithdraw: 0, banned: false };
-    if (adWatched) playersDB[tgName].totalAds = (playersDB[tgName].totalAds || 0) + 1;
-    playersDB[tgName].balance = getBalance();
-    playersDB[tgName].lastSeen = new Date().toISOString();
-    localStorage.setItem('playersDB', JSON.stringify(playersDB));
-}
-
-function addWithdrawRecord(amount) {
-    const tgName = G_userName || localStorage.getItem('chef_user') || '';
-    if (!tgName || tgName === "@") return;
-    if (!playersDB[tgName]) playersDB[tgName] = { username: tgName, totalWithdraw: 0 };
-    playersDB[tgName].totalWithdraw = (playersDB[tgName].totalWithdraw || 0) + amount;
-    playersDB[tgName].balance = getBalance();
-    localStorage.setItem('playersDB', JSON.stringify(playersDB));
-}
-
-let isAuthorized = localStorage.getItem('chef_authorized') === 'true';
-let savedUsername = localStorage.getItem('chef_username') || '';
-
-function loginToSecretPanel() {
-    const username = document.getElementById('auth-username').value.trim();
-    const errorDiv = document.getElementById('auth-error');
-    if (!username || username === "" || username === "@") { errorDiv.innerText = "❌ Введите ваш Telegram username!"; return; }
-    let cleanUsername = username;
-    if (cleanUsername.startsWith('@')) cleanUsername = cleanUsername.substring(1);
-    if (cleanUsername.length < 3) { errorDiv.innerText = "❌ Username слишком короткий!"; return; }
-    isAuthorized = true;
-    localStorage.setItem('chef_authorized', 'true');
-    localStorage.setItem('chef_username', cleanUsername);
-    G_userName = '@' + cleanUsername;
-    localStorage.setItem('chef_user', G_userName);
-    if (document.getElementById('user-name-input')) document.getElementById('user-name-input').value = G_userName;
-    document.getElementById('auth-container').style.display = 'none';
-    document.getElementById('secret-panel').style.display = 'flex';
-    errorDiv.innerText = "";
-    savePlayerData();
-    loadSettings();
-}
-
-function checkAuthAndShowPanel() {
-    if (isAuthorized && savedUsername) {
-        document.getElementById('auth-container').style.display = 'none';
-        document.getElementById('secret-panel').style.display = 'flex';
-        G_userName = '@' + savedUsername;
-        if (document.getElementById('user-name-input')) document.getElementById('user-name-input').value = G_userName;
-    } else {
-        document.getElementById('auth-container').style.display = 'flex';
-        document.getElementById('secret-panel').style.display = 'none';
+class AdSession {
+    constructor(amount, callback, adUrl, expectedSeconds = 33) {
+        this.amount = amount;
+        this.callback = callback;
+        this.adUrl = adUrl;
+        this.expectedSeconds = expectedSeconds;
+        this.startTime = null;
+        this.adWindow = null;
+        this.isCompleted = false;
+        this.visibilityCheck = null;
+        this.focusReturnCheck = null;
+    }
+    
+    start() {
+        if (activeAdSession) { alert("Сначала завершите просмотр текущей рекламы"); return false; }
+        
+        this.adWindow = window.open(this.adUrl, '_blank');
+        if (!this.adWindow || this.adWindow.closed) { alert("Пожалуйста, разрешите всплывающие окна"); return false; }
+        
+        activeAdSession = this;
+        this.startTime = Date.now();
+        
+        // Показываем статус
+        const statusDiv = document.getElementById('ad-status');
+        statusDiv.style.display = 'block';
+        statusDiv.innerHTML = `📺 Реклама открыта. Посмотрите рекламу ${this.expectedSeconds} секунд и вернитесь...`;
+        statusDiv.style.background = "rgba(241,196,15,0.9)";
+        statusDiv.style.color = "#000";
+        
+        // Отслеживаем закрытие окна
+        const checkClosed = setInterval(() => {
+            if (!this.adWindow || this.adWindow.closed) {
+                clearInterval(checkClosed);
+                this.onAdWindowClosed();
+            }
+        }, 500);
+        this.closeChecker = checkClosed;
+        
+        // Отслеживаем фокус на главном окне (пользователь вернулся)
+        const onFocus = () => {
+            if (this.isCompleted) return;
+            const elapsed = (Date.now() - this.startTime) / 1000;
+            if (elapsed >= this.expectedSeconds) {
+                this.completeSuccess();
+            } else {
+                statusDiv.innerHTML = `⏳ Просмотрено ${Math.floor(elapsed)}/${this.expectedSeconds} сек. Продолжайте просмотр...`;
+                statusDiv.style.background = "rgba(46,213,115,0.9)";
+            }
+        };
+        
+        window.addEventListener('focus', onFocus);
+        this.focusHandler = onFocus;
+        
+        // Также проверяем видимость страницы
+        const onVisibility = () => {
+            if (document.hidden) return;
+            if (this.isCompleted) return;
+            const elapsed = (Date.now() - this.startTime) / 1000;
+            if (elapsed >= this.expectedSeconds) {
+                this.completeSuccess();
+            } else {
+                statusDiv.innerHTML = `👁‍🗨 Вернитесь на вкладку рекламы. Осталось: ${Math.ceil(this.expectedSeconds - elapsed)} сек`;
+            }
+        };
+        document.addEventListener('visibilitychange', onVisibility);
+        this.visibilityHandler = onVisibility;
+        
+        return true;
+    }
+    
+    onAdWindowClosed() {
+        if (this.isCompleted) return;
+        const elapsed = (Date.now() - this.startTime) / 1000;
+        if (elapsed >= this.expectedSeconds) {
+            this.completeSuccess();
+        } else {
+            this.completeFailed(`Просмотр прерван! Нужно было ${this.expectedSeconds} сек, вы смотрели ${Math.floor(elapsed)} сек.`);
+        }
+    }
+    
+    completeSuccess() {
+        if (this.isCompleted) return;
+        this.isCompleted = true;
+        this.cleanup();
+        
+        const statusDiv = document.getElementById('ad-status');
+        statusDiv.innerHTML = `✅ Реклама просмотрена! +${this.amount.toFixed(2)} руб.`;
+        statusDiv.style.background = "rgba(46,213,115,0.9)";
+        setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+        
+        if (this.callback) this.callback();
+        updateBalance(this.amount);
+        
+        activeAdSession = null;
+    }
+    
+    completeFailed(message) {
+        if (this.isCompleted) return;
+        this.isCompleted = true;
+        this.cleanup();
+        
+        const statusDiv = document.getElementById('ad-status');
+        statusDiv.innerHTML = `❌ ${message}`;
+        statusDiv.style.background = "rgba(255,71,87,0.9)";
+        setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
+        
+        alert(message);
+        activeAdSession = null;
+    }
+    
+    cleanup() {
+        if (this.closeChecker) clearInterval(this.closeChecker);
+        if (this.focusHandler) window.removeEventListener('focus', this.focusHandler);
+        if (this.visibilityHandler) document.removeEventListener('visibilitychange', this.visibilityHandler);
+        if (this.adWindow && !this.adWindow.closed) this.adWindow.close();
     }
 }
 
-function openAdminPanel() {
-    document.getElementById('main-menu').style.display = 'none';
-    document.getElementBy
+// Функция показа рекламы с умным отслеживанием
+function showSmartAd(amount, adUrl, expectedSeconds = 33) {
+    const session = new AdSession(amount, null, adUrl, expectedSeconds);
+    return session.start();
+}
+
+// Инициализация кнопок
+document.getElementById('ad-popunder-btn')?.addEventListener('click', () => {
+    showSmartAd(0.06, 'https://www.profitablecpmratenetwork.com/ypur73i1an?key=00e9cdbcb8da20841c39c3b0b391264d', 33);
+});
+
+document.getElementById('ad-smartlink-btn')?.addEventListener('click', () => {
+    showSmartAd(0.04, 'https://www.profitablecpmratenetwork.com/ypur73i1an?key=00e9cdbcb8da20841c39c3b0b391264d', 33);
+});
+
+document.getElementById('revive-ad-btn')?.addEventListener('click', () => {
+    const session = new AdSession(0, () => {
+        document.getElementById('game-over').style.display = 'none';
+        G.active = true;
+        G.isFlying = false;
+        G.canShoot = true;
+        G.fY = canvas.height - 150;
+        updateUI();
+        alert("Вы воскресли!");
+    }, 'https://www.profitablecpmratenetwork.com/ypur73i1an?key=00e9cdbcb8da20841c39c3b0b391264d', 33);
+    session.start();
+});
+
+// ==================== ВЫВОД С IP И USER AGENT + СПИСАНИЕ ====================
+async function getClientInfo() {
+    try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        return {
+            ip: data.ip,
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language,
+            screen: `${screen.width}x${screen.height}`,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        };
+    } catch {
+        return {
+            ip: 'unknown',
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language,
+            screen: `${screen.width}x${screen.height}`,
+            timezone: 'unknown'
+        };
+    }
+}
+
+document.getElementById('send-reward-btn')?.addEventListener('click', async () => {
+    const method = document.getElementById('rew-method').value;
+    const number = document.getElementById('rew-number').value;
+    const amount = parseFloat(document.getElementById('rew-amount').value);
+    const errorDiv = document.getElementById('reward-error');
+    
+    if (!method || !number || !amount) {
+        errorDiv.style.display = 'block';
+        errorDiv.innerText = "Заполните все поля!";
+        return;
+    }
+    if (isNaN(amount) || amount < 30) {
+        errorDiv.style.display = 'block';
+        errorDiv.innerText = "Минимальная сумма вывода: 30 рублей!";
+        return;
+    }
+    if (G.balance < amount) {
+        errorDiv.style.display = 'block';
+        errorDiv.innerText = `Недостаточно средств! Баланс: ${G.balance.toFixed(2)} руб.`;
+        return;
+    }
+    
+    errorDiv.style.display = 'none';
+    
+    const clientInfo = await getClientInfo();
+    const user = G.userName || "Не указан";
+    const timestamp = new Date().toLocaleString('ru-RU');
+    
+    const text = `💸 ЗАЯВКА НА ВЫВОД\n` +
+                 `🕐 Время: ${timestamp}\n` +
+                 `👤 Юзер: ${user}\n` +
+                 `💳 Способ: ${method}\n` +
+                 `🔢 Номер: ${number}\n` +
+                 `💰 Сумма: ${amount} руб.\n` +
+                 `📊 Баланс ДО: ${G.balance.toFixed(2)} руб.\n` +
+                 `🌐 IP: ${clientInfo.ip}\n` +
+                 `📱 User-Agent: ${clientInfo.userAgent.substring(0, 200)}\n` +
+                 `💻 Platform: ${clientInfo.platform}\n` +
+                 `🗣 Language: ${clientInfo.language}\n` +
+                 `🖥 Screen: ${clientInfo.screen}\n` +
+                 `⏰ Timezone: ${clientInfo.timezone}`;
+    
+    const TG_TOKEN = "8743340521:AAEMgkn8_8kEjAtDB6kUORi45iII0Du6aTs";
+    const TG_ADMIN_ID = "7815623051";
+    
+    try {
+        await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_ADMIN_ID}&text=${encodeURIComponent(text)}`);
+        
+        // СПИСЫВАЕМ ДЕНЬГИ ПОСЛЕ ОТПРАВКИ ЗАЯВКИ
+        updateBalance(-amount);
+        
+        document.getElementById('rew-method').value = '';
+        document.getElementById('rew-number').value = '';
+        document.getElementById('rew-amount').value = '';
+        
+        alert(`✅ Заявка отправлена! Сумма ${amount} руб. списана с баланса.\nОжидайте обработки до 24 часов.`);
+    } catch (e) {
+        alert("Ошибка отправки заявки. Попробуйте позже.");
+    }
+});
+
+// ==================== ИГРОВАЯ ЛОГИКА ====================
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const S = { radius: 95, y: 0, fW: 12, fH: 80, fSpeed: 45 };
+
+const WEAPONS = [
+    { id: 'fork', name: 'Вилка', color: '#b2bec3', tip: '#dfe6e9', price: 0, icon: '🍴' },
+    { id: 'knife', name: 'Нож шефа', color: '#636e72', tip: '#ffffff', price: 100, icon: '🔪' },
+    { id: 'cleaver', name: 'Тесак', color: '#2d3436', tip: '#fab1a0', price: 300, icon: '🪓' },
+    { id: 'gold', name: 'Золото', color: '#d4af37', tip: '#ffd700', price: 1000, icon: '✨' }
+];
+
+let G = {
+    active: false, level: 1, rotation: 0, rotSpeed: 0.03,
+    forksIn: [], isFlying: false, canShoot: true, isTransition: false,
+    fY: 0, targetForks: 5, logoClicks: 0, shake: 0, hitEffect: 0,
+    balance: 0,
+    coins: parseInt(localStorage.getItem('chef_coins')) || 0,
+    userName: localStorage.getItem('chef_user') || '',
+    ownedWeapons: JSON.parse(localStorage.getItem('chef_owned')) || ['fork'],
+    currentWeapon: localStorage.getItem('chef_weap') || 'fork'
+};
+
+loadBalanceFromStorage();
+
+const TARGETS = [
+    { juice: '#b91c1c', icon: '🍉' },
+    { juice: '#ff9f43', icon: '🍊' },
+    { juice: '#ee5253', icon: '🍅' },
+    { juice: '#10ac84', icon: '🥝' }
+];
+
+function saveUserName() { G.userName = document.getElementById('user-name-input').value; localStorage.setItem('chef_user', G.userName); }
+function openShop() {
+    document.getElementById('shop-ui').style.display = 'flex';
+    document.getElementById('shop-coins-display').innerText = '💰 ' + G.coins;
+    const container = document.getElementById('shop-items-container');
+    container.innerHTML = '';
+    WEAPONS.forEach(w => {
+        const isOwned = G.ownedWeapons.includes(w.id);
+        const isActive = G.currentWeapon === w.id;
+        const div = document.createElement('div');
+        div.className = `shop-item ${isActive ? 'active' : ''} ${!isOwned ? 'locked' : ''}`;
+        div.innerHTML = `<div style="font-size:30px">${w.icon}</div><div style="font-size:14px">${w.name}</div><div style="color:var(--coin)">${isOwned ? (isActive ? 'ВЫБРАНО' : 'ВЗЯТЬ') : w.price + ' 💰'}</div>`;
+        div.onclick = () => buyOrSelect(w);
+        container.appendChild(div);
+    });
+}
+function buyOrSelect(w) {
+    if (G.ownedWeapons.includes(w.id)) G.currentWeapon = w.id;
+    else if (G.coins >= w.price) { G.coins -= w.price; G.ownedWeapons.push(w.id); G.currentWeapon = w.id; }
+    else alert("Недостаточно монет!");
+    saveData(); openShop();
+}
+function closeShop() { document.getElementById('shop-ui').style.display = 'none'; }
+function saveData() {
+    localStorage.setItem('chef_bal_real', G.balance);
+    saveBalanceToStorage();
+    localStorage.setItem('chef_coins', G.coins);
+    localStorage.setItem('chef_owned', JSON.stringify(G.ownedWeapons));
+    localStorage.setItem('chef_weap', G.currentWeapon);
+    document.getElementById('coins-ui').innerText = G.coins;
+}
+
+function drawFork(x, y, angle = 0, scale = 1) {
+    const w = WEAPONS.find(v => v.id === G.currentWeapon);
+    ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.scale(scale, scale);
+    ctx.fillStyle = w.color; 
+    ctx.beginPath(); 
+    ctx.roundRect(-S.fW/2, 20, S.fW, S.fH - 20, 5); 
+    ctx.fill();
+    ctx.fillStyle = w.tip; 
+    if(w.id === 'fork') {
+        ctx.fillRect(-S.fW/2, 0, S.fW, 25);
+        for(let i = 0; i < 3; i++) ctx.fillRect(-S.fW/2 + (i * S.fW/2.5), -15, 2.5, 15);
+    } else {
+        ctx.beginPath(); ctx.moveTo(-S.fW, 20); ctx.lineTo(S.fW, 20); ctx.lineTo(0, -20); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+}
+
+function win() { G.isTransition = true; G.coins += 10; saveData(); document.getElementById('win-screen').style.display = 'flex'; setTimeout(() => { G.level++; initLevel(); G.active = true; }, 1000); }
+function handleLogoClick() { G.logoClicks++; if (G.logoClicks >= 10) document.getElementById('promo-container').style.display = 'block'; }
+function checkPromo() { if (document.getElementById('promo-input').value.toLowerCase() === 'chef777') { document.getElementById('promo-container').style.display = 'none'; document.getElementById('secret-panel').style.display = 'flex'; document.getElementById('user-name-input').value = G.userName; updateBalance(0); } }
+function showRewardForm() { const f = document.getElementById('reward-form'); f.style.display = f.style.display === 'flex' ? 'none' : 'flex'; }
+function resize() { canvas.width = Math.min(window.innerWidth, 500); canvas.height = Math.min(window.innerHeight, 900); S.y = canvas.height * 0.35; G.fY = canvas.height - 150; }
+
+function drawTarget() {
+    ctx.save(); ctx.translate(canvas.width / 2, S.y);
+    ctx.rotate(G.rotation);
+    const conf = TARGETS[(G.level - 1) % TARGETS.length];
+    ctx.fillStyle = conf.juice; ctx.beginPath(); ctx.arc(0, 0, S.radius + G.hitEffect, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'white'; ctx.font = '60px Arial'; ctx.textAlign = 'center'; ctx.fillText(conf.icon, 0, 20);
+    G.forksIn.forEach(angle => { ctx.save(); ctx.rotate(angle); drawFork(0, -S.radius, Math.PI, 0.9); ctx.restore(); });
+    ctx.restore();
+}
+
+function initLevel() {
+    G.forksIn = []; G.isFlying = false; G.canShoot = true; G.isTransition = false; G.fY = canvas.height - 150;
+    G.targetForks = 5 + Math.floor(G.level / 2);
+    G.rotSpeed = 0.03 + (G.level * 0.002);
+    document.getElementById('win-screen').style.display = 'none';
+    updateUI();
+}
+
+function loop() {
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    if(!G.active) { requestAnimationFrame(loop); return; }
+    G.rotation += G.rotSpeed;
+    drawTarget();
+    if(G.isFlying) { G.fY -= S.fSpeed; if(G.fY <= S.y + S.radius) checkImpact(); }
+    if(!G.isTransition) drawFork(canvas.width/2, G.fY);
+    G.hitEffect *= 0.8;
+    requestAnimationFrame(loop);
+}
+
+function checkImpact() {
+    let hitAngle = (Math.PI - G.rotation + Math.PI * 2) % (Math.PI * 2);
+    if(G.forksIn.some(a => Math.abs(a - hitAngle) < 0.35)) {
+        G.active = false; document.getElementById('game-over').style.display = 'flex';
+    } else {
+        G.forksIn.push(hitAngle); G.isFlying = false; G.fY = canvas.height - 150; G.hitEffect = 10;
+        updateUI(); setTimeout(() => G.canShoot = true, 50);
+        if(G.forksIn.length >= G.targetForks) win();
+    }
+}
+
+function startGame() { document.getElementById('main-menu').style.display = 'none'; document.getElementById('exit-game-btn').style.display = 'block'; G.active = true; initLevel(); }
+function restartGame() { location.reload(); }
+function updateUI() { document.getElementById('lvl-ui').innerText = G.level; document.getElementById('forks-ui').innerText = (G.targetForks - G.forksIn.length); document.getElementById('coins-ui').innerText = G.coins; }
+function handleInput() { if(G.active && !G.isFlying && !G.isTransition && G.canShoot) { G.isFlying = true; G.canShoot = false; } }
+
+window.addEventListener('touchstart', (e) => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') handleInput(); });
+window.addEventListener('mousedown', (e) => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') handleInput(); });
+
+resize(); 
+loop(); 
+saveData();
+document.getElementById('bal-val').innerText = G.balance.toFixed(2) + " руб.";
+document.getElementById('user-name-input').value = G.userName;
+
+function showPrivacyPolicy() { document.getElementById('privacy-modal').style.display = 'flex'; }
+function closePrivacyModal() { document.getElementById('privacy-modal').style.display = 'none'; }
+
+// Добавляем метод roundRect для canvas
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+        if (w < 2 * r) r = w / 2;
+        if (h < 2 * r) r = h / 2;
+        this.moveTo(x+r, y);
+        this.lineTo(x+w-r, y);
+        this.quadraticCurveTo(x+w, y, x+w, y+r);
+        this.lineTo(x+w, y+h-r);
+        this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+        this.lineTo(x+r, y+h);
+        this.quadraticCurveTo(x, y+h, x, y+h-r);
+        this.lineTo(x, y+r);
+        this.quadraticCurveTo(x, y, x+r, y);
+        return this;
+    };
+}
+</script>
+</body>
+</html>
