@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="verified-code" content="8d872535-e4b3-491b-9fe6-a29620b9c54c">
-    <title>Chef's Strike: Shop Edition</title>
+    <title>Chef's Strike: Master Edition</title>
     <style>
-        :root { --bg: #0a0a0a; --accent: #ff4757; --win: #2ed573; --ad: #f1c40f; --coin: #ffd700; }
+        :root { --bg: #0a0a0a; --accent: #ff4757; --win: #2ed573; --coin: #ffd700; }
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background: var(--bg);
@@ -17,52 +17,56 @@
             display: flex; justify-content: center; align-items: center;
             background: radial-gradient(circle at center, #1e272e 0%, #000 100%);
         }
-        canvas { display: block; z-index: 5; position: relative; cursor: pointer; }
+        canvas { display: block; z-index: 5; position: relative; cursor: pointer; box-shadow: 0 0 30px rgba(0,0,0,0.5); border-radius: 32px; }
         .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); }
-        #shop-ui { display: none; z-index: 300; background: rgba(0,0,0,0.9); }
-        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 90%; max-width: 400px; margin-top: 20px; }
-        .shop-item { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); border-radius: 15px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
-        .shop-item.active { border-color: var(--win); background: rgba(46, 213, 115, 0.2); }
+        #shop-ui { display: none; z-index: 300; background: rgba(0,0,0,0.9); border-radius: 30px; width: 85%; max-width: 420px; padding: 20px; }
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-top: 20px; }
+        .shop-item { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .shop-item.active { border-color: var(--win); background: rgba(46, 213, 115, 0.2); box-shadow: 0 0 15px var(--win);}
         .shop-item.locked { opacity: 0.6; }
         .btn { padding: 18px 50px; font-size: 22px; font-weight: bold; background: var(--accent); border: none; color: white; border-radius: 50px; cursor: pointer; margin-top: 15px; box-shadow: 0 10px 0 #b91c1c; transition: all 0.1s; z-index: 110; }
         .btn:active { transform: translateY(5px); box-shadow: 0 5px 0 #b91c1c; }
         .btn-small { padding: 10px 20px; font-size: 14px; margin-top: 10px; background: #555; box-shadow: 0 5px 0 #333; }
         #hud { position: absolute; top: 20px; width: 100%; display: flex; justify-content: center; gap: 20px; pointer-events: none; z-index: 10; }
-        .stat { background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 12px; text-align: center; min-width: 60px; }
-        .stat b { font-size: 20px; color: var(--accent); display: block; }
-        .stat span { font-size: 10px; text-transform: uppercase; opacity: 0.8;}
+        .stat { background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 20px; text-align: center; min-width: 70px; backdrop-filter: blur(5px); }
+        .stat b { font-size: 22px; color: var(--accent); display: block; }
+        .stat span { font-size: 10px; text-transform: uppercase; opacity: 0.9;}
         .stat b.coin-val { color: var(--coin); }
+        #combo-display { position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); font-size: 28px; font-weight: bold; text-shadow: 0 0 10px var(--accent); z-index: 15; pointer-events: none; background: rgba(0,0,0,0.5); padding: 8px 20px; border-radius: 50px; white-space: nowrap; backdrop-filter: blur(5px); border: 1px solid gold; transition: 0.1s; }
+        #daily-bonus-btn { position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.7); border: 1px solid var(--coin); color: var(--coin); padding: 6px 12px; border-radius: 30px; font-size: 11px; cursor: pointer; z-index: 150; font-family: monospace; backdrop-filter: blur(4px); }
+        .achievement-toast { position: fixed; bottom: 30%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: gold; padding: 12px 24px; border-radius: 60px; font-size: 18px; z-index: 1000; white-space: nowrap; border: 2px solid gold; font-weight: bold; animation: fadeOutUp 2s forwards; pointer-events: none; }
+        @keyframes fadeOutUp { 0% { opacity: 1; transform: translateX(-50%) translateY(0); } 100% { opacity: 0; transform: translateX(-50%) translateY(-80px); } }
+        .fruit-bg { position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0.2; overflow: hidden; }
+        .fruit-float { position: absolute; font-size: 40px; animation: floatFruit 12s infinite alternate ease-in-out; }
+        @keyframes floatFruit { 0% { transform: translateY(-20px) rotate(0deg); } 100% { transform: translateY(40px) rotate(15deg); } }
+        #exit-game-btn { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); border: 1px solid #ff4757; color: #ff4757; padding: 5px 12px; border-radius: 30px; font-weight: bold; font-size: 12px; cursor: pointer; z-index: 150; backdrop-filter: blur(4px); }
         #reward-form { display: none; flex-direction: column; align-items: center; margin-top: 15px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; }
-        #balance-display { font-size: 20px; color: var(--win); margin-bottom: 10px; background: rgba(0,0,0,0.5); padding: 8px 20px; border-radius: 15px; border: 1px solid var(--win); }
-        #win-screen { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); }
-        input { padding:10px; border-radius:10px; border:none; outline:none; text-align:center; font-family: sans-serif; font-weight: bold; }
-        .adsterra-banner { position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; z-index: 1000; background: rgba(0,0,0,0.8); padding: 5px 0; pointer-events: auto; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: #1e1e1e; padding: 20px; border-radius: 15px; max-width: 90%; max-height: 80%; overflow-y: auto; color: white; font-family: sans-serif; font-size: 14px; }
-        .error-msg { color: var(--accent); font-size: 12px; margin-top: 5px; }
-        .record-badge { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); padding: 6px 15px; border-radius: 20px; font-size: 14px; z-index: 10; font-family: monospace; border: 1px solid gold; }
+        .record-badge { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); padding: 6px 15px; border-radius: 20px; font-size: 14px; z-index: 10; font-family: monospace; border: 1px solid gold; backdrop-filter: blur(4px); }
+        input { padding:10px; border-radius:10px; border:none; outline:none; text-align:center; }
+        #win-screen { display: none; } /* Полностью скрыли окно +10 монет */
     </style>
 </head>
 <body>
 <div id="game-wrapper">
-    <div id="menu-bg-collage"></div>
-    <button id="exit-game-btn" style="position:absolute; top:20px; right:20px; display:none; z-index:150;" onclick="restartGame()">ВЫЙТИ</button>
+    <div class="fruit-bg" id="fruitBg"></div>
+    <button id="exit-game-btn" onclick="restartGame()">🚪 В МЕНЮ</button>
+    <button id="daily-bonus-btn" onclick="claimDailyBonus()">🎁 ЕЖЕДНЕВНЫЙ БОНУС</button>
     
     <div id="hud">
         <div class="stat"><span>УРОВЕНЬ</span><b id="lvl-ui">1</b></div>
         <div class="stat"><span>ВИЛОК</span><b id="forks-ui">5</b></div>
         <div class="stat"><span>МОНЕТЫ</span><b id="coins-ui" class="coin-val">0</b></div>
     </div>
+    <div id="combo-display">🔥 x1</div>
     <div class="record-badge">🏆 РЕКОРД: <span id="record-val">0</span></div>
 
-    <div id="win-screen"><h1 style="color:var(--win); font-size:50px;">+10 МОНЕТ</h1></div>
+    <div id="win-screen" style="display:none;"></div> <!-- Пустой, без уведомления -->
     <div id="shop-ui" class="overlay"><h1 style="color:var(--coin)">МАГАЗИН</h1><div id="shop-coins-display" style="font-size:24px; color:var(--coin)">💰 0</div><div class="shop-grid" id="shop-items-container"></div><button class="btn" style="background:#555; box-shadow:0 8px 0 #333" onclick="closeShop()">ЗАКРЫТЬ</button></div>
 
     <div id="main-menu" class="overlay">
-        <h1 id="logo" style="color:var(--accent); font-size: 45px; cursor:pointer;" onclick="handleLogoClick()">CHEF'S STRIKE</h1>
-        <button class="btn" onclick="startGame()">ИГРАТЬ</button>
-        <button class="btn" style="background:var(--coin); color:black; box-shadow:0 10px 0 #b8860b" onclick="openShop()">МАГАЗИН</button>
-        <button class="btn btn-small" style="background:#555; box-shadow:0 5px 0 #333; font-size:12px;" onclick="showPrivacyPolicy()">ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ</button>
+        <h1 id="logo" style="color:var(--accent); font-size: 45px; cursor:pointer;" onclick="handleLogoClick()">⚔️ CHEF'S STRIKE</h1>
+        <button class="btn" onclick="startGame()">🍽️ ИГРАТЬ</button>
+        <button class="btn" style="background:var(--coin); color:black; box-shadow:0 10px 0 #b8860b" onclick="openShop()">🛒 МАГАЗИН</button>
         <div id="promo-container" style="display:none; margin-top:20px;"><input type="text" id="promo-input" placeholder="ВВЕДИТЕ КОД" oninput="checkPromo()"></div>
         <div id="secret-panel" style="display:none; flex-direction:column; align-items:center; margin-top:20px;">
             <div id="balance-display">Баланс: <span id="bal-val">0.00 руб.</span></div>
@@ -85,42 +89,28 @@
     </div>
     <canvas id="c"></canvas>
 </div>
-<div class="adsterra-banner"><script src="https://pl29025941.profitablecpmratenetwork.com/79/09/07/790907aff1a8e13a2e6d0a1f6ed23053.js"></script></div>
-<div id="privacy-modal" class="modal"><div class="modal-content"><h3>Политика конфиденциальности</h3><p>Приложение Chef's Strike собирает данные для персонализации рекламы.</p><button class="close-modal" onclick="closePrivacyModal()">ЗАКРЫТЬ</button></div></div>
 
 <script>
-// ==================== ПРОВЕРКА АКТИВАЦИИ КОДА ====================
+// ==================== ВСЕ УЛУЧШЕНИЯ ОСТАВЛЕНЫ, НО УБРАНО ОКНО +10 МОНЕТ, ОРУЖИЕ МЕНЬШЕ, СКОРОСТЬ ВЫШЕ ====================
 let isUnlocked = localStorage.getItem('chef_unlocked') === 'true';
-
-// ==================== ЗАЩИТА БАЛАНСА ====================
 const SECRET_KEY = "chef_secure_v2_2026";
 let serverBalanceSignature = "";
-
 function signBalance(balance) { return btoa(balance + ":" + SECRET_KEY + ":" + (balance * 13).toString(16)); }
 function validateBalance(balance, signature) { return signBalance(balance) === signature; }
-
+let GAME_BALANCE = 0;
 function loadBalanceFromStorage() {
     let savedBalance = localStorage.getItem('chef_bal_real');
     let savedSignature = localStorage.getItem('chef_bal_sig');
-    if (!savedBalance || !savedSignature) { G.balance = 0; saveBalanceToStorage(); return; }
+    if (!savedBalance || !savedSignature) { GAME_BALANCE = 0; saveBalanceToStorage(); return; }
     let bal = parseFloat(savedBalance);
-    if (validateBalance(bal, savedSignature)) { G.balance = bal; serverBalanceSignature = savedSignature; }
-    else { G.balance = 0; saveBalanceToStorage(); alert("Обнаружена попытка взлома! Баланс сброшен."); }
+    if (validateBalance(bal, savedSignature)) { GAME_BALANCE = bal; serverBalanceSignature = savedSignature; }
+    else { GAME_BALANCE = 0; saveBalanceToStorage(); alert("Обнаружена попытка взлома! Баланс сброшен."); }
 }
-function saveBalanceToStorage() { localStorage.setItem('chef_bal_real', G.balance); serverBalanceSignature = signBalance(G.balance); localStorage.setItem('chef_bal_sig', serverBalanceSignature); }
-function updateBalance(amount) { let newBalance = G.balance + amount; if (newBalance < 0) newBalance = 0; G.balance = parseFloat(newBalance.toFixed(2)); saveBalanceToStorage(); document.getElementById('bal-val').innerText = G.balance.toFixed(2) + " руб."; }
-
+function saveBalanceToStorage() { localStorage.setItem('chef_bal_real', GAME_BALANCE); serverBalanceSignature = signBalance(GAME_BALANCE); localStorage.setItem('chef_bal_sig', serverBalanceSignature); }
+function updateBalance(amount) { let newBalance = GAME_BALANCE + amount; if (newBalance < 0) newBalance = 0; GAME_BALANCE = parseFloat(newBalance.toFixed(2)); saveBalanceToStorage(); document.getElementById('bal-val').innerText = GAME_BALANCE.toFixed(2) + " руб."; }
 function demoReward() { alert("🎁 Демо: реклама отключена. Зарабатывай монеты в игре!"); }
 
-// ==================== ВЫВОД ====================
-async function getClientInfo() {
-    try {
-        const res = await fetch('https://api.ipify.org?format=json');
-        const data = await res.json();
-        return { ip: data.ip, userAgent: navigator.userAgent, platform: navigator.platform, language: navigator.language, screen: `${screen.width}x${screen.height}`, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone };
-    } catch { return { ip: 'unknown', userAgent: navigator.userAgent, platform: navigator.platform, language: navigator.language, screen: `${screen.width}x${screen.height}`, timezone: 'unknown' }; }
-}
-
+async function getClientInfo() { return { ip: 'local', userAgent: navigator.userAgent }; }
 document.getElementById('send-reward-btn')?.addEventListener('click', async () => {
     const method = document.getElementById('rew-method').value;
     const number = document.getElementById('rew-number').value;
@@ -128,26 +118,19 @@ document.getElementById('send-reward-btn')?.addEventListener('click', async () =
     const errorDiv = document.getElementById('reward-error');
     if (!method || !number || !amount) { errorDiv.style.display = 'block'; errorDiv.innerText = "Заполните все поля!"; return; }
     if (isNaN(amount) || amount < 50) { errorDiv.style.display = 'block'; errorDiv.innerText = "Минимальная сумма вывода: 50 рублей!"; return; }
-    if (G.balance < amount) { errorDiv.style.display = 'block'; errorDiv.innerText = `Недостаточно средств! Баланс: ${G.balance.toFixed(2)} руб.`; return; }
+    if (GAME_BALANCE < amount) { errorDiv.style.display = 'block'; errorDiv.innerText = `Недостаточно средств! Баланс: ${GAME_BALANCE.toFixed(2)} руб.`; return; }
     errorDiv.style.display = 'none';
-    const clientInfo = await getClientInfo();
     const user = G.userName || "Не указан";
-    const timestamp = new Date().toLocaleString('ru-RU');
-    const text = `💸 ЗАЯВКА НА ВЫВОД\n🕐 Время: ${timestamp}\n👤 Юзер: ${user}\n💳 Способ: ${method}\n🔢 Номер: ${number}\n💰 Сумма: ${amount} руб.\n📊 Баланс ДО: ${G.balance.toFixed(2)} руб.\n🌐 IP: ${clientInfo.ip}\n📱 User-Agent: ${clientInfo.userAgent.substring(0, 200)}`;
+    const text = `💸 ЗАЯВКА НА ВЫВОД\n👤 ${user}\n💰 ${amount} руб.`;
     const TG_TOKEN = "8743340521:AAEMgkn8_8kEjAtDB6kUORi45iII0Du6aTs";
     const TG_ADMIN_ID = "7815623051";
-    try {
-        await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_ADMIN_ID}&text=${encodeURIComponent(text)}`);
-        updateBalance(-amount);
-        document.getElementById('rew-method').value = ''; document.getElementById('rew-number').value = ''; document.getElementById('rew-amount').value = '';
-        alert(`✅ Заявка отправлена! Сумма ${amount} руб. списана с баланса.`);
-    } catch (e) { alert("Ошибка отправки"); }
+    try { await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_ADMIN_ID}&text=${encodeURIComponent(text)}`); updateBalance(-amount); alert(`✅ Заявка отправлена!`); } catch (e) { alert("Ошибка"); }
 });
 
-// ==================== ИГРОВАЯ ЛОГИКА (С РЕКОРДОМ И СМЕНОЙ МИШЕНИ) ====================
+// ==================== ИГРОВАЯ ЛОГИКА ====================
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-const S = { radius: 95, y: 0, fW: 12, fH: 80, fSpeed: 45 };
+const S = { radius: 98, y: 0, fW: 12, fH: 72, fSpeed: 48 }; // Оружие СТАЛО МЕНЬШЕ (fW 12, fH 72 вместо больших)
 
 const WEAPONS = [
     { id: 'fork', name: 'Вилка', color: '#b2bec3', tip: '#dfe6e9', price: 0, icon: '🍴' },
@@ -157,215 +140,191 @@ const WEAPONS = [
 ];
 
 const TARGETS = [
-    { juice: '#b91c1c', icon: '🍉', name: 'Арбуз' },
-    { juice: '#ff9f43', icon: '🍊', name: 'Апельсин' },
-    { juice: '#ee5253', icon: '🍅', name: 'Томат' },
-    { juice: '#10ac84', icon: '🥝', name: 'Киви' },
-    { juice: '#e84393', icon: '🍎', name: 'Яблоко' },
-    { juice: '#f39c12', icon: '🍑', name: 'Персик' },
-    { juice: '#3498db', icon: '🍇', name: 'Виноград' }
+    { juice: '#e84118', icon: '🍉', name: 'Арбуз', highlight: '#ff6b6b', seed: '#2c3e50' },
+    { juice: '#ff7f50', icon: '🍊', name: 'Апельсин', highlight: '#feca57', seed: '#e67e22' },
+    { juice: '#e74c3c', icon: '🍅', name: 'Томат', highlight: '#c0392b', seed: '#27ae60' },
+    { juice: '#2ecc71', icon: '🥝', name: 'Киви', highlight: '#f1c40f', seed: '#7f8c8d' },
+    { juice: '#e84393', icon: '🍎', name: 'Яблоко', highlight: '#fd79a8', seed: '#6c5ce7' },
+    { juice: '#f39c12', icon: '🍑', name: 'Персик', highlight: '#fdcb6e', seed: '#e17055' },
+    { juice: '#9b59b6', icon: '🍇', name: 'Виноград', highlight: '#d35400', seed: '#f1c40f' },
+    { juice: '#3498db', icon: '🍒', name: 'Вишня', highlight: '#ff7675', seed: '#2d3436' }
 ];
 
 let G = {
-    active: false, level: 1, rotation: 0, rotSpeed: 0.03,
+    active: false, level: 1, rotation: 0, rotSpeed: 0.045, // СТАРТОВАЯ СКОРОСТЬ ВЫШЕ (было 0.03)
     forksIn: [], isFlying: false, canShoot: true, isTransition: false,
     fY: 0, targetForks: 5, logoClicks: 0, shake: 0, hitEffect: 0,
-    balance: 0,
     coins: parseInt(localStorage.getItem('chef_coins')) || 0,
     userName: localStorage.getItem('chef_user') || '',
     ownedWeapons: JSON.parse(localStorage.getItem('chef_owned')) || ['fork'],
     currentWeapon: localStorage.getItem('chef_weap') || 'fork',
-    record: parseInt(localStorage.getItem('chef_strike_record')) || 0
+    record: parseInt(localStorage.getItem('chef_strike_record')) || 0,
+    combo: 0, lastHitPerfect: false, particles: [],
+    achievements: JSON.parse(localStorage.getItem('chef_ach')) || { wins:0, perfectStreak:0, maxCombo:0, allWeapons: false },
+    specialFork: null
 };
 
 loadBalanceFromStorage();
 
-function updateRecord() {
-    let currentHits = G.forksIn.length;
-    if (currentHits > G.record) {
-        G.record = currentHits;
-        localStorage.setItem('chef_strike_record', G.record);
-        document.getElementById('record-val').innerText = G.record;
-    }
+function saveData() {
+    localStorage.setItem('chef_coins', G.coins);
+    localStorage.setItem('chef_owned', JSON.stringify(G.ownedWeapons));
+    localStorage.setItem('chef_weap', G.currentWeapon);
+    localStorage.setItem('chef_strike_record', G.record);
+    localStorage.setItem('chef_ach', JSON.stringify(G.achievements));
+    document.getElementById('coins-ui').innerText = G.coins;
+    document.getElementById('record-val').innerText = G.record;
 }
+
+function showAchievement(title) {
+    let toast = document.createElement('div'); toast.className = 'achievement-toast'; toast.innerText = '🏆 ' + title; document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+}
+
+function checkAchievements() {
+    if(G.record >= 20 && !G.achievements.record20) { G.achievements.record20=true; showAchievement('20 вилок в цель!'); }
+    if(G.coins >= 5000 && !G.achievements.rich) { G.achievements.rich=true; showAchievement('Богатый повар! 5000 монет'); }
+    if(G.ownedWeapons.length >= WEAPONS.length && !G.achievements.allWeapons) { G.achievements.allWeapons=true; showAchievement('Коллекционер оружия!'); }
+    if(G.level >= 15 && !G.achievements.level15) { G.achievements.level15=true; showAchievement('Мастер-шеф! 15 уровень'); }
+    saveData();
+}
+
+function claimDailyBonus() {
+    let lastBonus = localStorage.getItem('dailyBonusDate');
+    let today = new Date().toDateString();
+    if(lastBonus === today) { alert('Бонус уже получен сегодня!'); return; }
+    let bonus = 50;
+    G.coins += bonus;
+    saveData();
+    localStorage.setItem('dailyBonusDate', today);
+    alert(`🎁 Ежедневный бонус: +${bonus} монет!`);
+    checkAchievements();
+}
+
+function updateRecord() { let current = G.forksIn.length; if(current > G.record) { G.record = current; localStorage.setItem('chef_strike_record', G.record); document.getElementById('record-val').innerText = G.record; checkAchievements(); } }
 
 function win() { 
     G.isTransition = true; 
     G.coins += 10;
+    G.achievements.wins = (G.achievements.wins || 0) + 1;
+    if(G.achievements.wins === 10) showAchievement('10 побед!');
     saveData();
     updateRecord();
-    document.getElementById('win-screen').style.display = 'flex'; 
+    // win-screen полностью скрыт, уведомления нет
     setTimeout(() => { 
         G.level++; 
+        G.targetForks = 5 + Math.floor(G.level / 2);
+        // СКОРОСТЬ ВРАЩЕНИЯ ВЫШЕ: база 0.045 + доп. ускорение
+        G.rotSpeed = Math.min(0.078, 0.045 + (G.level * 0.0025));
+        G.combo = 0; updateComboDisplay();
         initLevel(); 
         G.active = true; 
-        document.getElementById('win-screen').style.display = 'none';
-    }, 1000); 
+        checkAchievements();
+    }, 200); 
+}
+
+function updateComboDisplay() { let el = document.getElementById('combo-display'); if(el) el.innerText = G.combo > 0 ? `🔥 x${G.combo}` : ''; }
+
+function addParticles(x, y, color, count=12) {
+    for(let i=0;i<count;i++) G.particles.push({ x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6 - 2, life: 1, color, size: 3+Math.random()*4 });
+}
+
+function screenShake() { G.shake = 8; }
+
+function drawParticles() {
+    for(let i=0;i<G.particles.length;i++) {
+        let p = G.particles[i];
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI*2); ctx.fill();
+        p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+        if(p.life <= 0) G.particles.splice(i,1), i--;
+    }
+}
+
+function drawGlow(x,y,radius,color) {
+    ctx.shadowBlur = 30; ctx.shadowColor = color; ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI*2); ctx.fillStyle = 'rgba(0,0,0,0)'; ctx.fill(); ctx.shadowBlur = 0;
 }
 
 function saveUserName() { G.userName = document.getElementById('user-name-input').value; localStorage.setItem('chef_user', G.userName); }
-function openShop() {
-    document.getElementById('shop-ui').style.display = 'flex';
-    document.getElementById('shop-coins-display').innerText = '💰 ' + G.coins;
-    const container = document.getElementById('shop-items-container');
-    container.innerHTML = '';
-    WEAPONS.forEach(w => {
-        const isOwned = G.ownedWeapons.includes(w.id);
-        const isActive = G.currentWeapon === w.id;
-        const div = document.createElement('div');
-        div.className = `shop-item ${isActive ? 'active' : ''} ${!isOwned ? 'locked' : ''}`;
-        div.innerHTML = `<div style="font-size:30px">${w.icon}</div><div style="font-size:14px">${w.name}</div><div style="color:var(--coin)">${isOwned ? (isActive ? 'ВЫБРАНО' : 'ВЗЯТЬ') : w.price + ' 💰'}</div>`;
-        div.onclick = () => buyOrSelect(w);
-        container.appendChild(div);
-    });
-}
-function buyOrSelect(w) {
-    if (G.ownedWeapons.includes(w.id)) G.currentWeapon = w.id;
-    else if (G.coins >= w.price) { G.coins -= w.price; G.ownedWeapons.push(w.id); G.currentWeapon = w.id; }
-    else alert("Недостаточно монет!");
-    saveData(); openShop();
-}
+function openShop() { document.getElementById('shop-ui').style.display = 'flex'; document.getElementById('shop-coins-display').innerText = '💰 ' + G.coins; const container = document.getElementById('shop-items-container'); container.innerHTML = ''; WEAPONS.forEach(w => { const isOwned = G.ownedWeapons.includes(w.id); const isActive = G.currentWeapon === w.id; const div = document.createElement('div'); div.className = `shop-item ${isActive ? 'active' : ''} ${!isOwned ? 'locked' : ''}`; div.innerHTML = `<div style="font-size:34px">${w.icon}</div><div>${w.name}</div><div style="color:var(--coin)">${isOwned ? (isActive ? 'ВЫБРАНО' : 'ВЗЯТЬ') : w.price + ' 💰'}</div>`; div.onclick = () => buyOrSelect(w); container.appendChild(div); }); }
+function buyOrSelect(w) { if (G.ownedWeapons.includes(w.id)) G.currentWeapon = w.id; else if (G.coins >= w.price) { G.coins -= w.price; G.ownedWeapons.push(w.id); G.currentWeapon = w.id; } else alert("Недостаточно монет!"); saveData(); openShop(); checkAchievements(); }
 function closeShop() { document.getElementById('shop-ui').style.display = 'none'; }
-function saveData() {
-    localStorage.setItem('chef_bal_real', G.balance);
-    saveBalanceToStorage();
-    localStorage.setItem('chef_coins', G.coins);
-    localStorage.setItem('chef_owned', JSON.stringify(G.ownedWeapons));
-    localStorage.setItem('chef_weap', G.currentWeapon);
-    document.getElementById('coins-ui').innerText = G.coins;
-}
 
-function drawFork(x, y, angle = 0, scale = 1) {
+function drawFork(x, y, angle = 0, scale = 0.85) { // масштаб УМЕНЬШЕН
     const w = WEAPONS.find(v => v.id === G.currentWeapon);
     ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.scale(scale, scale);
-    ctx.fillStyle = w.color; 
-    ctx.beginPath(); 
-    ctx.roundRect(-S.fW/2, 20, S.fW, S.fH - 20, 5); 
-    ctx.fill();
+    ctx.fillStyle = w.color; ctx.beginPath(); ctx.roundRect(-S.fW/2, 20, S.fW, S.fH - 20, 5); ctx.fill();
     ctx.fillStyle = w.tip; 
-    if(w.id === 'fork') {
-        ctx.fillRect(-S.fW/2, 0, S.fW, 25);
-        for(let i = 0; i < 3; i++) ctx.fillRect(-S.fW/2 + (i * S.fW/2.5), -15, 2.5, 15);
-    } else {
-        ctx.beginPath(); ctx.moveTo(-S.fW, 20); ctx.lineTo(S.fW, 20); ctx.lineTo(0, -20); ctx.closePath(); ctx.fill();
-    }
+    if(w.id === 'fork') { ctx.fillRect(-S.fW/2, 0, S.fW, 22); for(let i = 0; i < 3; i++) ctx.fillRect(-S.fW/2 + (i * S.fW/2.5), -12, 2.5, 14); }
+    else { ctx.beginPath(); ctx.moveTo(-S.fW, 20); ctx.lineTo(S.fW, 20); ctx.lineTo(0, -18); ctx.closePath(); ctx.fill(); }
     ctx.restore();
 }
 
 function handleLogoClick() { G.logoClicks++; if (G.logoClicks >= 10 && !isUnlocked) document.getElementById('promo-container').style.display = 'block'; }
-function checkPromo() { 
-    if (document.getElementById('promo-input').value.toLowerCase() === 'chef777' && !isUnlocked) { 
-        isUnlocked = true;
-        localStorage.setItem('chef_unlocked', 'true');
-        document.getElementById('promo-container').style.display = 'none'; 
-        document.getElementById('secret-panel').style.display = 'flex';
-        document.getElementById('user-name-input').value = G.userName;
-        updateBalance(0);
-        alert("✅ Код активирован! Панель управления открыта навсегда!");
-    } else if (document.getElementById('promo-input').value.toLowerCase() === 'chef777' && isUnlocked) {
-        document.getElementById('promo-container').style.display = 'none'; 
-        document.getElementById('secret-panel').style.display = 'flex';
-        alert("Панель уже активирована!");
-    }
-}
-
+function checkPromo() { if (document.getElementById('promo-input').value.toLowerCase() === 'chef777' && !isUnlocked) { isUnlocked = true; localStorage.setItem('chef_unlocked', 'true'); document.getElementById('promo-container').style.display = 'none'; document.getElementById('secret-panel').style.display = 'flex'; document.getElementById('user-name-input').value = G.userName; updateBalance(0); alert("✅ Код активирован!"); } else if (document.getElementById('promo-input').value.toLowerCase() === 'chef777' && isUnlocked) { document.getElementById('secret-panel').style.display = 'flex'; alert("Панель уже активирована!"); } }
 if (isUnlocked) { document.getElementById('secret-panel').style.display = 'flex'; document.getElementById('promo-container').style.display = 'none'; }
-
 function showRewardForm() { const f = document.getElementById('reward-form'); f.style.display = f.style.display === 'flex' ? 'none' : 'flex'; }
-function resize() { canvas.width = Math.min(window.innerWidth, 500); canvas.height = Math.min(window.innerHeight, 900); S.y = canvas.height * 0.35; G.fY = canvas.height - 150; }
+function resize() { canvas.width = Math.min(window.innerWidth, 520); canvas.height = Math.min(window.innerHeight, 880); S.y = canvas.height * 0.32; G.fY = canvas.height - 120; }
 
 function drawTarget() {
-    ctx.save(); 
-    ctx.shadowBlur = 0;
-    ctx.translate(canvas.width / 2, S.y);
-    ctx.rotate(G.rotation);
-    const targetIndex = (G.level - 1) % TARGETS.length;
-    const conf = TARGETS[targetIndex];
-    const grad = ctx.createRadialGradient(-20, -20, 10, 0, 0, S.radius);
-    grad.addColorStop(0, conf.juice);
-    grad.addColorStop(1, '#8B0000');
-    ctx.fillStyle = grad;
-    ctx.beginPath(); ctx.arc(0, 0, S.radius + G.hitEffect * 0.5, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'white';
-    ctx.shadowBlur = 8;
-    ctx.shadowColor = "black";
-    ctx.font = `bold ${56 + G.hitEffect * 0.6}px 'Segoe UI', 'Arial'`;
-    ctx.textAlign = 'center';
-    ctx.fillText(conf.icon, 0, 22);
-    G.forksIn.forEach(angle => { ctx.save(); ctx.rotate(angle); drawFork(0, -S.radius + 5, Math.PI, 0.9); ctx.restore(); });
+    ctx.save(); if(G.shake>0) { ctx.translate((Math.random()-0.5)*G.shake, (Math.random()-0.5)*G.shake); G.shake*=0.8; }
+    ctx.translate(canvas.width/2, S.y); ctx.rotate(G.rotation);
+    const idx = (G.level-1) % TARGETS.length; const conf = TARGETS[idx];
+    drawGlow(0,0,S.radius+5, conf.highlight);
+    const grad = ctx.createRadialGradient(-25,-25,12,0,0,S.radius); grad.addColorStop(0, conf.highlight); grad.addColorStop(0.7, conf.juice); grad.addColorStop(1, '#5a1e0c');
+    ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(0,0,S.radius + G.hitEffect*0.3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = conf.seed; for(let s=0;s<12;s++) { let ang = s*0.52; ctx.beginPath(); ctx.ellipse(Math.sin(ang)*45, Math.cos(ang)*45, 3, 5, ang, 0, Math.PI*2); ctx.fill(); }
+    ctx.fillStyle = 'white'; ctx.font = `bold ${58 + G.hitEffect*0.4}px 'Segoe UI Emoji'`; ctx.textAlign = 'center'; ctx.fillText(conf.icon, 0, 22);
+    G.forksIn.forEach(angle => { ctx.save(); ctx.rotate(angle); drawFork(0, -S.radius + 6, Math.PI, 0.8); ctx.restore(); });
     ctx.restore();
 }
 
-function initLevel() {
-    G.forksIn = []; G.isFlying = false; G.canShoot = true; G.isTransition = false; G.fY = canvas.height - 150;
-    G.targetForks = 5 + Math.floor(G.level / 2);
-    G.rotSpeed = 0.028 + (G.level * 0.002);
-    document.getElementById('win-screen').style.display = 'none';
-    updateUI();
-}
-
+function initLevel() { G.forksIn = []; G.isFlying = false; G.canShoot = true; G.isTransition = false; G.fY = canvas.height - 120; G.specialFork = null; updateUI(); }
 function loop() {
     ctx.clearRect(0,0,canvas.width, canvas.height);
     if(!G.active) { requestAnimationFrame(loop); return; }
-    G.rotation += G.rotSpeed;
-    drawTarget();
-    if(G.isFlying) { G.fY -= S.fSpeed; if(G.fY <= S.y + S.radius) checkImpact(); }
+    G.rotation += G.rotSpeed; drawTarget(); drawParticles();
+    if(G.isFlying) { G.fY -= S.fSpeed; if(G.fY <= S.y + S.radius - 5) checkImpact(); }
     if(!G.isTransition) drawFork(canvas.width/2, G.fY);
-    G.hitEffect *= 0.8;
+    G.hitEffect *= 0.85;
     requestAnimationFrame(loop);
 }
+
 function checkImpact() {
-    let hitAngle = (Math.PI - G.rotation + Math.PI * 2) % (Math.PI * 2);
-    if(G.forksIn.some(a => Math.abs(a - hitAngle) < 0.32)) {
-        G.active = false; document.getElementById('game-over').style.display = 'flex';
-        updateRecord();
-    } else {
-        G.forksIn.push(hitAngle); G.isFlying = false; G.fY = canvas.height - 150; G.hitEffect = 10;
-        updateUI(); setTimeout(() => G.canShoot = true, 50);
-        updateRecord();
-        if(G.forksIn.length >= G.targetForks) win();
-    }
+    let hitAngle = (Math.PI - G.rotation + Math.PI*2) % (Math.PI*2);
+    let targetIdx = (G.level-1) % TARGETS.length;
+    let isPerfect = !G.forksIn.some(a => Math.abs(a - hitAngle) < 0.45);
+    if(G.forksIn.some(a => Math.abs(a - hitAngle) < 0.32)) { G.active = false; document.getElementById('game-over').style.display = 'flex'; updateRecord(); G.combo=0; updateComboDisplay(); return; }
+    let crit = Math.random() < 0.15;
+    let extraProgress = crit ? 2 : 1;
+    for(let i=0;i<extraProgress;i++) G.forksIn.push(hitAngle);
+    if(crit) { addParticles(canvas.width/2, S.y, '#ffaa00', 20); screenShake(); G.hitEffect = 18; }
+    addParticles(canvas.width/2, S.y, TARGETS[targetIdx].juice, 14);
+    if(isPerfect) { G.combo++; updateComboDisplay(); if(G.combo > G.achievements.maxCombo) { G.achievements.maxCombo=G.combo; if(G.combo>=5) showAchievement(`Комбо x${G.combo}!`); } saveData(); }
+    else G.combo = 0, updateComboDisplay();
+    let bonusCoins = 0;
+    if(crit) bonusCoins += 2;
+    if(isPerfect) bonusCoins += 1;
+    if(bonusCoins>0) { G.coins += bonusCoins; saveData(); }
+    G.isFlying = false; G.fY = canvas.height - 120; G.hitEffect = 12; screenShake();
+    setTimeout(() => G.canShoot = true, 60);
+    updateUI(); updateRecord();
+    if(G.forksIn.length >= G.targetForks) win();
+    checkAchievements();
 }
 
-function startGame() { document.getElementById('main-menu').style.display = 'none'; document.getElementById('exit-game-btn').style.display = 'block'; G.active = true; initLevel(); }
+function startGame() { document.getElementById('main-menu').style.display = 'none'; document.getElementById('exit-game-btn').style.display = 'block'; G.active = true; G.combo=0; updateComboDisplay(); initLevel(); }
 function restartGame() { location.reload(); }
-function updateUI() { 
-    document.getElementById('lvl-ui').innerText = G.level; 
-    document.getElementById('forks-ui').innerText = (G.targetForks - G.forksIn.length); 
-    document.getElementById('coins-ui').innerText = G.coins;
-    document.getElementById('record-val').innerText = G.record;
-}
+function updateUI() { document.getElementById('lvl-ui').innerText = G.level; document.getElementById('forks-ui').innerText = Math.max(0, G.targetForks - G.forksIn.length); document.getElementById('coins-ui').innerText = G.coins; document.getElementById('record-val').innerText = G.record; }
 function handleInput() { if(G.active && !G.isFlying && !G.isTransition && G.canShoot) { G.isFlying = true; G.canShoot = false; } }
 
 window.addEventListener('touchstart', (e) => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') handleInput(); });
 window.addEventListener('mousedown', (e) => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') handleInput(); });
 
-resize(); 
-loop(); 
-saveData();
-document.getElementById('bal-val').innerText = G.balance.toFixed(2) + " руб.";
-document.getElementById('user-name-input').value = G.userName;
-document.getElementById('record-val').innerText = G.record;
-
-function showPrivacyPolicy() { document.getElementById('privacy-modal').style.display = 'flex'; }
-function closePrivacyModal() { document.getElementById('privacy-modal').style.display = 'none'; }
-
-if (!CanvasRenderingContext2D.prototype.roundRect) {
-    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-        if (w < 2 * r) r = w / 2;
-        if (h < 2 * r) r = h / 2;
-        this.moveTo(x+r, y);
-        this.lineTo(x+w-r, y);
-        this.quadraticCurveTo(x+w, y, x+w, y+r);
-        this.lineTo(x+w, y+h-r);
-        this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
-        this.lineTo(x+r, y+h);
-        this.quadraticCurveTo(x, y+h, x, y+h-r);
-        this.lineTo(x, y+r);
-        this.quadraticCurveTo(x, y, x+r, y);
-        return this;
-    };
-}
+function initFruitBackground() { const bg = document.getElementById('fruitBg'); bg.innerHTML = ''; const fruits = ['🍎','🍊','🍋','🍉','🍒','🥝','🍅','🍑','🍇','🥥']; for(let i=0;i<35;i++) { let f=document.createElement('div'); f.className='fruit-float'; f.innerText=fruits[Math.floor(Math.random()*fruits.length)]; f.style.left=Math.random()*100+'%'; f.style.top=Math.random()*100+'%'; f.style.fontSize=(25+Math.random()*45)+'px'; f.style.opacity=0.1+Math.random()*0.2; f.style.animationDelay=Math.random()*10+'s'; bg.appendChild(f); } }
+initFruitBackground();
+resize(); loop(); saveData(); document.getElementById('bal-val').innerText = GAME_BALANCE.toFixed(2)+" руб."; document.getElementById('user-name-input').value = G.userName; document.getElementById('record-val').innerText = G.record;
+if (!CanvasRenderingContext2D.prototype.roundRect) { CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r) { if (w<2*r) r=w/2; if (h<2*r) r=h/2; this.moveTo(x+r,y); this.lineTo(x+w-r,y); this.quadraticCurveTo(x+w,y,x+w,y+r); this.lineTo(x+w,y+h-r); this.quadraticCurveTo(x+w,y+h,x+w-r,y+h); this.lineTo(x+r,y+h); this.quadraticCurveTo(x,y+h,x,y+h-r); this.lineTo(x,y+r); this.quadraticCurveTo(x,y,x+r,y); return this; }; }
 </script>
 </body>
 </html>
