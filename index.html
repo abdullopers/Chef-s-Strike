@@ -2,567 +2,72 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="verified-code" content="51e5ff3b-13bf-4c30-8762-44859f952e3a">
-    <title>Chef's Strike: Master Edition — Start.io</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Политика конфиденциальности</title>
     <style>
-        :root { --bg: #0a0a0a; --accent: #ff4757; --win: #2ed573; --coin: #ffd700; }
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background: var(--bg);
-            font-family: 'Arial Black', sans-serif; color: white;
-            user-select: none; touch-action: none;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background-color: #f9f9f9;
         }
-        #game-wrapper {
-            position: relative; width: 100vw; height: 100vh;
-            display: flex; justify-content: center; align-items: center;
-            background: radial-gradient(circle at center, #1e272e 0%, #000 100%);
+        .container {
+            background: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        canvas { display: block; z-index: 5; position: relative; cursor: pointer; box-shadow: 0 0 30px rgba(0,0,0,0.5); border-radius: 32px; }
-        .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); }
-        #shop-ui { display: none; z-index: 300; background: rgba(0,0,0,0.9); border-radius: 30px; width: 85%; max-width: 420px; padding: 20px; }
-        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-top: 20px; }
-        .shop-item { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
-        .shop-item.active { border-color: var(--win); background: rgba(46, 213, 115, 0.2); box-shadow: 0 0 15px var(--win);}
-        .shop-item.locked { opacity: 0.6; }
-        .btn { padding: 18px 50px; font-size: 22px; font-weight: bold; background: var(--accent); border: none; color: white; border-radius: 50px; cursor: pointer; margin-top: 15px; box-shadow: 0 10px 0 #b91c1c; transition: all 0.1s; z-index: 110; }
-        .btn:active { transform: translateY(5px); box-shadow: 0 5px 0 #b91c1c; }
-        .btn-small { padding: 10px 20px; font-size: 14px; margin-top: 10px; background: #555; box-shadow: 0 5px 0 #333; }
-        #hud { position: absolute; top: 20px; width: 100%; display: flex; justify-content: center; gap: 20px; pointer-events: none; z-index: 10; }
-        .stat { background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 20px; text-align: center; min-width: 70px; backdrop-filter: blur(5px); }
-        .stat b { font-size: 22px; color: var(--accent); display: block; }
-        .stat span { font-size: 10px; text-transform: uppercase; opacity: 0.9;}
-        .stat b.coin-val { color: var(--coin); }
-        #combo-display { position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); font-size: 28px; font-weight: bold; text-shadow: 0 0 10px var(--accent); z-index: 15; pointer-events: none; background: rgba(0,0,0,0.5); padding: 8px 20px; border-radius: 50px; white-space: nowrap; backdrop-filter: blur(5px); border: 1px solid gold; transition: 0.1s; }
-        #daily-bonus-btn { position: absolute; bottom: 90px; right: 20px; background: rgba(0,0,0,0.7); border: 1px solid var(--coin); color: var(--coin); padding: 6px 12px; border-radius: 30px; font-size: 11px; cursor: pointer; z-index: 150; font-family: monospace; backdrop-filter: blur(4px); }
-        .achievement-toast { position: fixed; bottom: 30%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); color: gold; padding: 12px 24px; border-radius: 60px; font-size: 18px; z-index: 1000; white-space: nowrap; border: 2px solid gold; font-weight: bold; animation: fadeOutUp 2s forwards; pointer-events: none; }
-        @keyframes fadeOutUp { 0% { opacity: 1; transform: translateX(-50%) translateY(0); } 100% { opacity: 0; transform: translateX(-50%) translateY(-80px); } }
-        .fruit-bg { position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0.2; overflow: hidden; }
-        .fruit-float { position: absolute; font-size: 40px; animation: floatFruit 12s infinite alternate ease-in-out; }
-        @keyframes floatFruit { 0% { transform: translateY(-20px) rotate(0deg); } 100% { transform: translateY(40px) rotate(15deg); } }
-        #exit-game-btn { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7); border: 1px solid #ff4757; color: #ff4757; padding: 5px 12px; border-radius: 30px; font-weight: bold; font-size: 12px; cursor: pointer; z-index: 150; backdrop-filter: blur(4px); }
-        #reward-form { display: none; flex-direction: column; align-items: center; margin-top: 15px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; }
-        .record-badge { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); padding: 6px 15px; border-radius: 20px; font-size: 14px; z-index: 10; font-family: monospace; border: 1px solid gold; backdrop-filter: blur(4px); }
-        input { padding:10px; border-radius:10px; border:none; outline:none; text-align:center; }
-        
-        /* Баннер внизу АВТОМАТИЧЕСКИ */
-        .banner-ad-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(0,0,0,0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 200;
-            height: 70px;
-            backdrop-filter: blur(10px);
-            border-top: 2px solid #ffd700;
-            pointer-events: auto;
-        }
-        .mock-ad-banner {
-            background: linear-gradient(90deg, #2c3e50, #1a1a2e);
-            width: 100%;
-            max-width: 480px;
-            margin: 0 auto;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            padding: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            font-family: monospace;
-            color: #ffd966;
-            border: 1px solid #ffd700;
-        }
-        .mock-ad-banner span { font-size: 28px; }
-        
-        .ad-btn-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .ad-btn {
-            background: #2c3e50;
-            padding: 10px 20px;
-            border-radius: 40px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            border: 1px solid var(--coin);
-            transition: 0.2s;
-        }
-        .ad-btn:active { transform: scale(0.96); }
-        
-        .victory-effect {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 50;
-            animation: victoryFlash 0.5s ease-out;
-        }
-        @keyframes victoryFlash {
-            0% { background: radial-gradient(circle, gold, transparent); opacity: 1; }
-            100% { background: transparent; opacity: 0; }
-        }
-        
-        .ad-modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            border-radius: 30px;
-            padding: 30px;
-            text-align: center;
-            z-index: 1000;
-            border: 3px solid #ffd700;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            min-width: 280px;
-        }
-        .ad-modal h2 { color: #ffd700; margin: 0 0 15px 0; }
-        .ad-modal p { font-size: 18px; margin: 10px 0; }
-        .ad-progress {
-            width: 100%;
-            height: 8px;
-            background: #333;
-            border-radius: 10px;
-            margin: 20px 0;
-            overflow: hidden;
-        }
-        .ad-progress-fill {
-            width: 0%;
-            height: 100%;
-            background: #ffd700;
-            transition: width 0.1s linear;
-        }
-        .close-ad-btn {
-            background: #ff4757;
-            padding: 12px 30px;
-            border-radius: 40px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            color: white;
-            margin-top: 10px;
-        }
-        .close-ad-btn:active { transform: scale(0.96); }
+        h1 { border-bottom: 2px solid #eee; padding-bottom: 10px; color: #222; }
+        h2 { margin-top: 30px; color: #444; font-size: 1.4em; }
+        p { margin: 15px 0; }
+        .email { color: #007bff; text-decoration: none; font-weight: bold; }
+        .footer-note { margin-top: 50px; font-size: 0.9em; color: #777; text-align: center; }
     </style>
 </head>
 <body>
-<div id="game-wrapper">
-    <div class="fruit-bg" id="fruitBg"></div>
-    <button id="exit-game-btn" onclick="restartGame()">🚪 В МЕНЮ</button>
-    <button id="daily-bonus-btn" onclick="claimDailyBonus()">🎁 ЕЖЕДНЕВНЫЙ БОНУС</button>
-    
-    <div id="hud">
-        <div class="stat"><span>УРОВЕНЬ</span><b id="lvl-ui">1</b></div>
-        <div class="stat"><span>ВИЛОК</span><b id="forks-ui">5</b></div>
-        <div class="stat"><span>МОНЕТЫ</span><b id="coins-ui" class="coin-val">0</b></div>
-    </div>
-    <div id="combo-display">🔥 x1</div>
-    <div class="record-badge">🏆 РЕКОРД: <span id="record-val">0</span></div>
 
-    <div id="shop-ui" class="overlay"><h1 style="color:var(--coin)">МАГАЗИН</h1><div id="shop-coins-display" style="font-size:24px; color:var(--coin)">💰 0</div><div class="shop-grid" id="shop-items-container"></div><button class="btn" style="background:#555; box-shadow:0 8px 0 #333" onclick="closeShop()">ЗАКРЫТЬ</button></div>
+<div class="container">
+    <h1>Политика конфиденциальности</h1>
+    <p><strong>Дата вступления в силу:</strong> 7 апреля 2026 г.</p>
 
-    <div id="main-menu" class="overlay">
-        <h1 id="logo" style="color:var(--accent); font-size: 45px; cursor:pointer;" onclick="handleLogoClick()">⚔️ CHEF'S STRIKE</h1>
-        <button class="btn" onclick="startGame()">🍽️ ИГРАТЬ</button>
-        <button class="btn" style="background:var(--coin); color:black; box-shadow:0 10px 0 #b8860b" onclick="openShop()">🛒 МАГАЗИН</button>
-        <div id="promo-container" style="display:none; margin-top:20px;"><input type="text" id="promo-input" placeholder="ВВЕДИТЕ КОД" oninput="checkPromo()"></div>
-        <div id="secret-panel" style="display:none; flex-direction:column; align-items:center; margin-top:20px;">
-            <div id="balance-display" style="background:#000000aa; padding:8px 20px; border-radius:30px; margin-bottom:10px;">💰 Баланс вывода: <span id="bal-val" style="color:var(--coin); font-weight:bold;">0.00</span> руб.</div>
-            <input type="text" id="user-name-input" placeholder="@ваш_телеграм" oninput="saveUserName()" style="margin-bottom:10px; border: 1px solid var(--win);">
-            <div class="ad-btn-group">
-                <button class="ad-btn" id="rewarded-video-btn" style="background:#e67e22;">🎥 REWARDED VIDEO (+0.055₽)</button>
-                <button class="ad-btn" id="interstitial-ad-btn" style="background:#e74c3c;">📺 INTERSTITIAL (+0.035₽)</button>
-            </div>
-            <button class="btn" style="background:#9b59b6; box-shadow: 0 8px 0 #7d3c98; font-size:16px; margin-top:15px;" onclick="showRewardForm()">💸 ВЫПЛАТА</button>
-            <div id="reward-form">
-                <input type="text" id="rew-method" placeholder="Способ (Карта/СБП)" style="margin-bottom:5px;">
-                <input type="text" id="rew-number" placeholder="Номер счета" style="margin-bottom:5px;">
-                <input type="number" id="rew-amount" placeholder="Сумма (мин 50 руб)" min="50" step="1" style="margin-bottom:5px;">
-                <div id="reward-error" class="error-msg" style="display:none; color:red;"></div>
-                <button class="btn" id="send-reward-btn" style="background:var(--win); box-shadow:0 8px 0 #219150; font-size:14px; padding:10px 20px;">ОТПРАВИТЬ</button>
-            </div>
-        </div>
-    </div>
+    <p>Настоящая Политика конфиденциальности описывает, как мы собираем, используем и защищаем вашу информацию при использовании нашего веб-сайта.</p>
 
-    <div id="game-over" class="overlay" style="display:none">
-        <h1 style="font-size: 50px; color: #ff4757;">ПРОМАХ!</h1>
-        <button class="btn" onclick="restartGame()">В МЕНЮ</button>
-        <button class="btn" id="continue-with-ad" style="background: var(--coin); color:black; box-shadow:0 10px 0 #b8860b;">▶️ ПРОДОЛЖИТЬ (РЕКЛАМА)</button>
-    </div>
-    <canvas id="c"></canvas>
-</div>
+    <h2>1. Сбор информации</h2>
+    <p>Мы собираем только те данные, которые необходимы для корректной работы сайта. К ним относятся:</p>
+    <ul>
+        <li>Технические данные (IP-адрес, тип браузера, время посещения);</li>
+        <li>Файлы cookies для улучшения навигации;</li>
+        <li>Контактные данные, которые вы оставляете добровольно.</li>
+    </ul>
 
-<!-- БАННЕР АВТОМАТИЧЕСКИ ВНИЗУ -->
-<div id="bannerAdContainer" class="banner-ad-container">
-    <div class="mock-ad-banner">
-        <span>📢</span> Start.io BANNER | ID: 203437137 | Реклама
+    <h2>2. Использование данных</h2>
+    <p>Ваша информация используется исключительно для:</p>
+    <ul>
+        <li>Связи с вами по вашим запросам;</li>
+        <li>Анализа посещаемости и улучшения контента;</li>
+        <li>Предотвращения технических сбоев.</li>
+    </ul>
+
+    <h2>3. Защита ваших данных</h2>
+    <p>Мы применяем современные средства безопасности, чтобы предотвратить несанкционированный доступ, изменение или удаление вашей личной информации. Мы не передаем и не продаем ваши данные третьим лицам.</p>
+
+    <h2>4. Файлы Cookies</h2>
+    <p>Наш сайт использует файлы cookies. Вы можете в любой момент изменить настройки браузера, чтобы блокировать эти файлы, однако это может повлиять на работу некоторых функций сайта.</p>
+
+    <h2>5. Права пользователей</h2>
+    <p>Вы имеете право запросить копию ваших данных, которые у нас хранятся, или потребовать их полного удаления из нашей системы.</p>
+
+    <h2>6. Контакты</h2>
+    <p>Если у вас возникли вопросы по данной политике, пожалуйста, свяжитесь с нами по электронной почте:</p>
+    <p><a href="mailto:abdullojonnurmatov86@gmail.com" class="email">abdullojonnurmatov86@gmail.com</a></p>
+
+    <div class="footer-note">
+        &copy; 2026 Все права защищены.
     </div>
 </div>
 
-<script>
-// ==================== START.IO INTEGRATION (ID: 203437137) ====================
-const STARTIO_APP_ID = "203437137";
-console.log(`Start.io SDK initialized with App ID: ${STARTIO_APP_ID}`);
-
-// Баланс вывода (рубли)
-let GAME_BALANCE = 0;
-const SECRET_KEY = "chef_secure_v2_2026";
-
-function signBalance(balance) { return btoa(balance + ":" + SECRET_KEY + ":" + (balance * 13).toString(16)); }
-function validateBalance(balance, signature) { return signBalance(balance) === signature; }
-
-function loadBalanceFromStorage() {
-    let savedBalance = localStorage.getItem('chef_bal_real');
-    let savedSignature = localStorage.getItem('chef_bal_sig');
-    if (!savedBalance || !savedSignature) { GAME_BALANCE = 0; saveBalanceToStorage(); return; }
-    let bal = parseFloat(savedBalance);
-    if (validateBalance(bal, savedSignature)) { GAME_BALANCE = bal; }
-    else { GAME_BALANCE = 0; saveBalanceToStorage(); alert("Обнаружена попытка взлома! Баланс сброшен."); }
-}
-function saveBalanceToStorage() { localStorage.setItem('chef_bal_real', GAME_BALANCE.toFixed(2)); localStorage.setItem('chef_bal_sig', signBalance(GAME_BALANCE)); }
-function updateBalance(amount) { 
-    let newBalance = GAME_BALANCE + amount; 
-    if (newBalance < 0) newBalance = 0; 
-    GAME_BALANCE = parseFloat(newBalance.toFixed(3)); 
-    saveBalanceToStorage(); 
-    document.getElementById('bal-val').innerText = GAME_BALANCE.toFixed(3);
-    return GAME_BALANCE;
-}
-
-// Функция показа модального окна рекламы с таймером
-// isRewarded: true - награда только после полного просмотра (30 сек), false - можно закрыть раньше без награды
-function showAdModal(title, rewardAmount, isRewarded, onComplete) {
-    const modal = document.createElement('div');
-    modal.className = 'ad-modal';
-    const totalSeconds = 30; // 30 секунд как в реальном Start.io SDK
-    modal.innerHTML = `
-        <h2>🎬 ${title}</h2>
-        <p>Start.io ID: ${STARTIO_APP_ID}</p>
-        <p>💰 Награда: +${rewardAmount}₽</p>
-        <div class="ad-progress"><div class="ad-progress-fill" id="ad-progress-fill"></div></div>
-        <p id="ad-timer-text">Просмотр: 0 / ${totalSeconds} сек</p>
-        <button class="close-ad-btn" id="close-ad-btn" style="opacity:0.5;" ${isRewarded ? 'disabled' : ''}>${isRewarded ? '⏳ ДОСМОТРИТЕ ДО КОНЦА...' : '✖️ ЗАКРЫТЬ (без награды)'}</button>
-    `;
-    document.body.appendChild(modal);
-    
-    let timeLeft = totalSeconds;
-    let rewardGranted = false;
-    const progressFill = document.getElementById('ad-progress-fill');
-    const timerText = document.getElementById('ad-timer-text');
-    const closeBtn = document.getElementById('close-ad-btn');
-    
-    const interval = setInterval(() => {
-        timeLeft--;
-        const progressPercent = ((totalSeconds - timeLeft) / totalSeconds) * 100;
-        if (progressFill) progressFill.style.width = progressPercent + '%';
-        if (timerText) timerText.innerText = `Просмотр: ${totalSeconds - timeLeft} / ${totalSeconds} сек`;
-        
-        if (timeLeft <= 0 && !rewardGranted) {
-            clearInterval(interval);
-            rewardGranted = true;
-            if (timerText) timerText.innerText = '✅ Реклама просмотрена!';
-            if (closeBtn) {
-                closeBtn.innerText = '✅ ПОЛУЧИТЬ НАГРАДУ';
-                closeBtn.style.opacity = '1';
-                closeBtn.disabled = false;
-            }
-        }
-    }, 1000);
-    
-    closeBtn.onclick = () => {
-        if (isRewarded && timeLeft > 0) {
-            alert("Досмотрите рекламу до конца, чтобы получить награду!");
-            return;
-        }
-        clearInterval(interval);
-        if (rewardGranted || (!isRewarded && timeLeft <= 0)) {
-            updateBalance(rewardAmount);
-            alert(`✅ Получено +${rewardAmount}₽ на баланс вывода!`);
-        } else if (!isRewarded && timeLeft > 0) {
-            alert(`Вы закрыли рекламу раньше времени. Награда не начислена.`);
-        }
-        modal.remove();
-        if (onComplete && (rewardGranted || (!isRewarded && timeLeft <= 0))) onComplete(true);
-        else if (onComplete) onComplete(false);
-    };
-}
-
-// Rewarded Video (+0.055₽) - ТОЛЬКО ПОСЛЕ ПОЛНОГО ПРОСМОТРА 30 СЕК
-function showRewardedVideo(callback) {
-    showAdModal('REWARDED VIDEO', 0.055, true, callback);
-}
-
-// Interstitial Ad (+0.035₽) - 30 сек, можно закрыть раньше, но без награды
-function showInterstitialAd(callback) {
-    showAdModal('INTERSTITIAL AD', 0.035, false, callback);
-}
-
-// Инициализация кнопок в скрытой панели
-document.addEventListener('DOMContentLoaded', () => {
-    const rewardedBtn = document.getElementById('rewarded-video-btn');
-    const interstitialBtn = document.getElementById('interstitial-ad-btn');
-    
-    if(rewardedBtn) rewardedBtn.onclick = () => {
-        showRewardedVideo(null);
-    };
-    if(interstitialBtn) interstitialBtn.onclick = () => {
-        showInterstitialAd(null);
-    };
-    
-    // Кнопка продолжения после проигрыша (использует Rewarded Video)
-    const continueBtn = document.getElementById('continue-with-ad');
-    if(continueBtn) continueBtn.onclick = () => {
-        showRewardedVideo((success) => {
-            if(success) {
-                document.getElementById('game-over').style.display = 'none';
-                G.active = true;
-                G.isTransition = false;
-                G.canShoot = true;
-                G.isFlying = false;
-                G.fY = canvas.height - 120;
-                G.hitEffect = 0;
-                G.combo = 0;
-                updateComboDisplay();
-                initLevel();
-                G.active = true;
-            } else {
-                alert("Реклама не досмотрена или не загружена");
-            }
-        });
-    };
-});
-
-// ==================== ИГРОВАЯ ЛОГИКА ====================
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-const S = { radius: 98, y: 0, fW: 12, fH: 72, fSpeed: 52 };
-
-const WEAPONS = [
-    { id: 'fork', name: 'Вилка', color: '#b2bec3', tip: '#dfe6e9', price: 0, icon: '🍴' },
-    { id: 'knife', name: 'Нож шефа', color: '#636e72', tip: '#ffffff', price: 100, icon: '🔪' },
-    { id: 'cleaver', name: 'Тесак', color: '#2d3436', tip: '#fab1a0', price: 300, icon: '🪓' },
-    { id: 'gold', name: 'Золото', color: '#d4af37', tip: '#ffd700', price: 1000, icon: '✨' }
-];
-
-const TARGETS = [
-    { juice: '#e84118', icon: '🍉', name: 'Арбуз', highlight: '#ff6b6b', seed: '#2c3e50' },
-    { juice: '#ff7f50', icon: '🍊', name: 'Апельсин', highlight: '#feca57', seed: '#e67e22' },
-    { juice: '#e74c3c', icon: '🍅', name: 'Томат', highlight: '#c0392b', seed: '#27ae60' },
-    { juice: '#2ecc71', icon: '🥝', name: 'Киви', highlight: '#f1c40f', seed: '#7f8c8d' },
-    { juice: '#e84393', icon: '🍎', name: 'Яблоко', highlight: '#fd79a8', seed: '#6c5ce7' },
-    { juice: '#f39c12', icon: '🍑', name: 'Персик', highlight: '#fdcb6e', seed: '#e17055' },
-    { juice: '#9b59b6', icon: '🍇', name: 'Виноград', highlight: '#d35400', seed: '#f1c40f' },
-    { juice: '#3498db', icon: '🍒', name: 'Вишня', highlight: '#ff7675', seed: '#2d3436' }
-];
-
-let G = {
-    active: false, level: 1, rotation: 0, rotSpeed: 0.048,
-    forksIn: [], isFlying: false, canShoot: true, isTransition: false,
-    fY: 0, targetForks: 6, logoClicks: 0, shake: 0, hitEffect: 0,
-    coins: parseInt(localStorage.getItem('chef_coins')) || 0,
-    userName: localStorage.getItem('chef_user') || '',
-    ownedWeapons: JSON.parse(localStorage.getItem('chef_owned')) || ['fork'],
-    currentWeapon: localStorage.getItem('chef_weap') || 'fork',
-    record: parseInt(localStorage.getItem('chef_strike_record')) || 0,
-    combo: 0, lastHitPerfect: false, particles: [],
-    achievements: JSON.parse(localStorage.getItem('chef_ach')) || { wins:0, perfectStreak:0, maxCombo:0, allWeapons: false }
-};
-
-loadBalanceFromStorage();
-
-function saveData() {
-    localStorage.setItem('chef_coins', G.coins);
-    localStorage.setItem('chef_owned', JSON.stringify(G.ownedWeapons));
-    localStorage.setItem('chef_weap', G.currentWeapon);
-    localStorage.setItem('chef_strike_record', G.record);
-    localStorage.setItem('chef_ach', JSON.stringify(G.achievements));
-    document.getElementById('coins-ui').innerText = G.coins;
-    document.getElementById('record-val').innerText = G.record;
-}
-
-function showAchievement(title) {
-    let toast = document.createElement('div'); toast.className = 'achievement-toast'; toast.innerText = '🏆 ' + title; document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
-}
-
-function checkAchievements() {
-    if(G.record >= 20 && !G.achievements.record20) { G.achievements.record20=true; showAchievement('20 вилок в цель!'); }
-    if(G.coins >= 5000 && !G.achievements.rich) { G.achievements.rich=true; showAchievement('Богатый повар! 5000 монет'); }
-    if(G.ownedWeapons.length >= WEAPONS.length && !G.achievements.allWeapons) { G.achievements.allWeapons=true; showAchievement('Коллекционер оружия!'); }
-    if(G.level >= 15 && !G.achievements.level15) { G.achievements.level15=true; showAchievement('Мастер-шеф! 15 уровень'); }
-    saveData();
-}
-
-function claimDailyBonus() {
-    let lastBonus = localStorage.getItem('dailyBonusDate');
-    let today = new Date().toDateString();
-    if(lastBonus === today) { alert('Бонус уже получен сегодня!'); return; }
-    let bonus = 50;
-    G.coins += bonus;
-    saveData();
-    localStorage.setItem('dailyBonusDate', today);
-    alert(`🎁 Ежедневный бонус: +${bonus} монет!`);
-    checkAchievements();
-}
-
-function updateRecord() { let current = G.forksIn.length; if(current > G.record) { G.record = current; localStorage.setItem('chef_strike_record', G.record); document.getElementById('record-val').innerText = G.record; checkAchievements(); } }
-
-function updateComboDisplay() { let el = document.getElementById('combo-display'); if(el) el.innerText = G.combo > 0 ? `🔥 x${G.combo}` : ''; }
-
-function addParticles(x, y, color, count=12) {
-    for(let i=0;i<count;i++) G.particles.push({ x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6 - 2, life: 1, color, size: 3+Math.random()*4 });
-}
-
-function screenShake() { G.shake = 8; }
-function drawParticles() { for(let i=0;i<G.particles.length;i++) { let p = G.particles[i]; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI*2); ctx.fill(); p.x += p.vx; p.y += p.vy; p.life -= 0.02; if(p.life <= 0) G.particles.splice(i,1), i--; } }
-function drawGlow(x,y,radius,color) { ctx.shadowBlur = 30; ctx.shadowColor = color; ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI*2); ctx.fillStyle = 'rgba(0,0,0,0)'; ctx.fill(); ctx.shadowBlur = 0; }
-function saveUserName() { G.userName = document.getElementById('user-name-input').value; localStorage.setItem('chef_user', G.userName); }
-function openShop() { document.getElementById('shop-ui').style.display = 'flex'; document.getElementById('shop-coins-display').innerText = '💰 ' + G.coins; const container = document.getElementById('shop-items-container'); container.innerHTML = ''; WEAPONS.forEach(w => { const isOwned = G.ownedWeapons.includes(w.id); const isActive = G.currentWeapon === w.id; const div = document.createElement('div'); div.className = `shop-item ${isActive ? 'active' : ''} ${!isOwned ? 'locked' : ''}`; div.innerHTML = `<div style="font-size:34px">${w.icon}</div><div>${w.name}</div><div style="color:var(--coin)">${isOwned ? (isActive ? 'ВЫБРАНО' : 'ВЗЯТЬ') : w.price + ' 💰'}</div>`; div.onclick = () => buyOrSelect(w); container.appendChild(div); }); }
-function buyOrSelect(w) { if (G.ownedWeapons.includes(w.id)) G.currentWeapon = w.id; else if (G.coins >= w.price) { G.coins -= w.price; G.ownedWeapons.push(w.id); G.currentWeapon = w.id; } else alert("Недостаточно монет!"); saveData(); openShop(); checkAchievements(); }
-function closeShop() { document.getElementById('shop-ui').style.display = 'none'; }
-function drawFork(x, y, angle = 0, scale = 0.85) { const w = WEAPONS.find(v => v.id === G.currentWeapon); ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.scale(scale, scale); ctx.fillStyle = w.color; ctx.beginPath(); ctx.roundRect(-S.fW/2, 20, S.fW, S.fH - 20, 5); ctx.fill(); ctx.fillStyle = w.tip; if(w.id === 'fork') { ctx.fillRect(-S.fW/2, 0, S.fW, 22); for(let i = 0; i < 3; i++) ctx.fillRect(-S.fW/2 + (i * S.fW/2.5), -12, 2.5, 14); } else { ctx.beginPath(); ctx.moveTo(-S.fW, 20); ctx.lineTo(S.fW, 20); ctx.lineTo(0, -18); ctx.closePath(); ctx.fill(); } ctx.restore(); }
-function handleLogoClick() { G.logoClicks++; if (G.logoClicks >= 10) document.getElementById('promo-container').style.display = 'block'; }
-function checkPromo() { if (document.getElementById('promo-input').value.toLowerCase() === 'chef777') { document.getElementById('promo-container').style.display = 'none'; document.getElementById('secret-panel').style.display = 'flex'; document.getElementById('user-name-input').value = G.userName; alert("✅ Скрытая панель активирована!"); } }
-function showRewardForm() { const f = document.getElementById('reward-form'); f.style.display = f.style.display === 'flex' ? 'none' : 'flex'; }
-function resize() { canvas.width = Math.min(window.innerWidth, 520); canvas.height = Math.min(window.innerHeight, 800); S.y = canvas.height * 0.32; G.fY = canvas.height - 120; }
-
-function drawTarget() {
-    ctx.save(); if(G.shake>0) { ctx.translate((Math.random()-0.5)*G.shake, (Math.random()-0.5)*G.shake); G.shake*=0.8; }
-    ctx.translate(canvas.width/2, S.y); ctx.rotate(G.rotation);
-    const idx = (G.level-1) % TARGETS.length; const conf = TARGETS[idx];
-    drawGlow(0,0,S.radius+5, conf.highlight);
-    const grad = ctx.createRadialGradient(-25,-25,12,0,0,S.radius); grad.addColorStop(0, conf.highlight); grad.addColorStop(0.7, conf.juice); grad.addColorStop(1, '#5a1e0c');
-    ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(0,0,S.radius + G.hitEffect*0.3,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle = conf.seed; for(let s=0;s<12;s++) { let ang = s*0.52; ctx.beginPath(); ctx.ellipse(Math.sin(ang)*45, Math.cos(ang)*45, 3, 5, ang, 0, Math.PI*2); ctx.fill(); }
-    ctx.fillStyle = 'white'; ctx.font = `bold ${58 + G.hitEffect*0.4}px 'Segoe UI Emoji'`; ctx.textAlign = 'center'; ctx.fillText(conf.icon, 0, 22);
-    G.forksIn.forEach(angle => { ctx.save(); ctx.rotate(angle); drawFork(0, -S.radius + 6, Math.PI, 0.8); ctx.restore(); });
-    ctx.restore();
-}
-
-function initLevel() { G.forksIn = []; G.isFlying = false; G.canShoot = true; G.isTransition = false; G.fY = canvas.height - 120; updateUI(); }
-
-function checkImpact() {
-    let hitAngle = (Math.PI - G.rotation + Math.PI*2) % (Math.PI*2);
-    let targetIdx = (G.level-1) % TARGETS.length;
-    let tolerance = 0.28;
-    let perfectTolerance = 0.4;
-    let isPerfect = !G.forksIn.some(a => Math.abs(a - hitAngle) < perfectTolerance);
-    if(G.forksIn.some(a => Math.abs(a - hitAngle) < tolerance)) {
-        G.active = false;
-        document.getElementById('game-over').style.display = 'flex';
-        updateRecord();
-        G.combo = 0;
-        updateComboDisplay();
-        return;
-    }
-    let crit = Math.random() < 0.12;
-    let extraProgress = crit ? 2 : 1;
-    for(let i=0;i<extraProgress;i++) G.forksIn.push(hitAngle);
-    if(crit) { addParticles(canvas.width/2, S.y, '#ffaa00', 20); screenShake(); G.hitEffect = 18; }
-    addParticles(canvas.width/2, S.y, TARGETS[targetIdx].juice, 14);
-    if(isPerfect) { G.combo++; updateComboDisplay(); if(G.combo > G.achievements.maxCombo) { G.achievements.maxCombo=G.combo; if(G.combo>=3) showAchievement(`Комбо x${G.combo}!`); } saveData(); }
-    else G.combo = 0, updateComboDisplay();
-    let bonusCoins = 0;
-    if(crit) bonusCoins += 2;
-    if(isPerfect) bonusCoins += 1;
-    if(bonusCoins>0) { G.coins += bonusCoins; saveData(); }
-    G.isFlying = false; G.fY = canvas.height - 120; G.hitEffect = 12; screenShake();
-    setTimeout(() => G.canShoot = true, 70);
-    updateUI(); updateRecord();
-    if(G.forksIn.length >= G.targetForks) winWithAnimation();
-    checkAchievements();
-}
-
-function winWithAnimation() {
-    G.isTransition = true;
-    G.coins += 10;
-    G.achievements.wins = (G.achievements.wins || 0) + 1;
-    if(G.achievements.wins === 10) showAchievement('10 побед!');
-    saveData();
-    updateRecord();
-    const effectDiv = document.createElement('div');
-    effectDiv.className = 'victory-effect';
-    document.body.appendChild(effectDiv);
-    setTimeout(() => effectDiv.remove(), 500);
-    let newRadius = Math.max(70, S.radius - (G.level * 0.8));
-    S.radius = newRadius;
-    setTimeout(() => {
-        G.level++;
-        G.targetForks = 6 + Math.floor(G.level / 1.8);
-        G.rotSpeed = Math.min(0.092, 0.048 + (G.level * 0.003));
-        G.combo = 0;
-        updateComboDisplay();
-        initLevel();
-        G.active = true;
-        G.isTransition = false;
-        checkAchievements();
-    }, 350);
-}
-
-function loop() {
-    ctx.clearRect(0,0,canvas.width, canvas.height);
-    if(!G.active) { requestAnimationFrame(loop); return; }
-    G.rotation += G.rotSpeed; drawTarget(); drawParticles();
-    if(G.isFlying) { G.fY -= S.fSpeed; if(G.fY <= S.y + S.radius - 5) checkImpact(); }
-    if(!G.isTransition) drawFork(canvas.width/2, G.fY);
-    G.hitEffect *= 0.85;
-    requestAnimationFrame(loop);
-}
-
-function startGame() { document.getElementById('main-menu').style.display = 'none'; document.getElementById('exit-game-btn').style.display = 'block'; G.active = true; G.combo=0; updateComboDisplay(); initLevel(); }
-function restartGame() { location.reload(); }
-function updateUI() { document.getElementById('lvl-ui').innerText = G.level; document.getElementById('forks-ui').innerText = Math.max(0, G.targetForks - G.forksIn.length); document.getElementById('coins-ui').innerText = G.coins; document.getElementById('record-val').innerText = G.record; }
-function handleInput() { if(G.active && !G.isFlying && !G.isTransition && G.canShoot) { G.isFlying = true; G.canShoot = false; } }
-
-window.addEventListener('touchstart', (e) => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') handleInput(); });
-window.addEventListener('mousedown', (e) => { if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') handleInput(); });
-
-function initFruitBackground() { const bg = document.getElementById('fruitBg'); bg.innerHTML = ''; const fruits = ['🍎','🍊','🍋','🍉','🍒','🥝','🍅','🍑','🍇','🥥']; for(let i=0;i<35;i++) { let f=document.createElement('div'); f.className='fruit-float'; f.innerText=fruits[Math.floor(Math.random()*fruits.length)]; f.style.left=Math.random()*100+'%'; f.style.top=Math.random()*100+'%'; f.style.fontSize=(25+Math.random()*45)+'px'; f.style.opacity=0.1+Math.random()*0.2; f.style.animationDelay=Math.random()*10+'s'; bg.appendChild(f); } }
-
-// Выплата через Telegram
-document.getElementById('send-reward-btn')?.addEventListener('click', async () => {
-    const method = document.getElementById('rew-method').value;
-    const number = document.getElementById('rew-number').value;
-    const amount = parseFloat(document.getElementById('rew-amount').value);
-    const errorDiv = document.getElementById('reward-error');
-    if (!method || !number || !amount) { errorDiv.style.display = 'block'; errorDiv.innerText = "Заполните все поля!"; return; }
-    if (isNaN(amount) || amount < 50) { errorDiv.style.display = 'block'; errorDiv.innerText = "Минимальная сумма вывода: 50 рублей!"; return; }
-    if (GAME_BALANCE < amount) { errorDiv.style.display = 'block'; errorDiv.innerText = `Недостаточно средств! Баланс: ${GAME_BALANCE.toFixed(3)} руб.`; return; }
-    errorDiv.style.display = 'none';
-    const user = G.userName || "Не указан";
-    const text = `💸 ЗАЯВКА НА ВЫВОД\n👤 ${user}\n💰 ${amount} руб.\n🧾 Способ: ${method}\n📞 ${number}`;
-    const TG_TOKEN = "8743340521:AAEMgkn8_8kEjAtDB6kUORi45iII0Du6aTs";
-    const TG_ADMIN_ID = "7815623051";
-    try { await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage?chat_id=${TG_ADMIN_ID}&text=${encodeURIComponent(text)}`); updateBalance(-amount); alert(`✅ Заявка отправлена!`); } catch (e) { alert("Ошибка отправки"); }
-});
-
-initFruitBackground();
-resize(); loop(); saveData(); 
-document.getElementById('bal-val').innerText = GAME_BALANCE.toFixed(3);
-document.getElementById('user-name-input').value = G.userName;
-document.getElementById('record-val').innerText = G.record;
-
-if (!CanvasRenderingContext2D.prototype.roundRect) { 
-    CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r) { 
-        if (w<2*r) r=w/2; if (h<2*r) r=h/2; 
-        this.moveTo(x+r,y); this.lineTo(x+w-r,y); this.quadraticCurveTo(x+w,y,x+w,y+r); 
-        this.lineTo(x+w,y+h-r); this.quadraticCurveTo(x+w,y+h,x+w-r,y+h); 
-        this.lineTo(x+r,y+h); this.quadraticCurveTo(x,y+h,x,y+h-r); 
-        this.lineTo(x,y+r); this.quadraticCurveTo(x,y,x+r,y); return this; 
-    }; 
-}
-</script>
 </body>
 </html>
